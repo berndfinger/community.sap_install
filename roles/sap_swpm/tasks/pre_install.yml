@@ -5,8 +5,8 @@
 ################
 
 - name: SAP SWPM Pre Install - Run Preinstallation Steps
-  ansible.builtin.include_tasks: swpm/swpm_pre_install.yml
-
+  ansible.builtin.import_tasks: swpm/swpm_pre_install.yml
+#  ansible.builtin.include_tasks: swpm/swpm_pre_install.yml
 
 ################
 # Set sapinst command
@@ -38,6 +38,7 @@
   ansible.builtin.include_tasks: pre_install/update_etchosts.yml
   when:
     - "sap_swpm_update_etchosts | bool"
+  tags: sap_swpm_update_etc_hosts
 
 ################
 # Display Parameters

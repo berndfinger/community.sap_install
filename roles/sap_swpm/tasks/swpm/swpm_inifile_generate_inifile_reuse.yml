@@ -23,6 +23,6 @@
 - name: SAP SWPM inifile_reuse mode - Detect Variables
   ansible.builtin.include_tasks: detect_variables.yml
 
-# Prepare Software
-- name: SAP SWPM inifile_reuse mode - Prepare Software
-  ansible.builtin.include_tasks: prepare_software.yml
+# Prepare Software - now called in swpm_pre_install.yml
+#- name: SAP SWPM inifile_reuse mode - Prepare Software
+#  ansible.builtin.include_tasks: prepare_software.yml

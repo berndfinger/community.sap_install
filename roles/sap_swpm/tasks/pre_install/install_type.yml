@@ -43,6 +43,10 @@
   when:
     - sap_swpm_mp_stack_path is defined and not sap_swpm_mp_stack_path is none
 
+- name: Display the Installation Type
+  ansible.builtin.debug:
+    var: sap_swpm_swpm_installation_type
+
 ################
 # Run Installation Type Steps
 ################
