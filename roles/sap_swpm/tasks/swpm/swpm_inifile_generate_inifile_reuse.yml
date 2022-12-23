@@ -30,6 +30,6 @@
       tags: sap_swpm_generate_inifile
   tags: sap_swpm_generate_inifile
 
-# Prepare Software
-- name: SAP SWPM inifile_reuse mode - Prepare Software
-  ansible.builtin.include_tasks: prepare_software.yml
+# Prepare Software - now called in swpm_pre_install.yml
+#- name: SAP SWPM inifile_reuse mode - Prepare Software
+#  ansible.builtin.include_tasks: prepare_software.yml

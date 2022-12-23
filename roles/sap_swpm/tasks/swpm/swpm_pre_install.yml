@@ -25,6 +25,20 @@
   ansible.builtin.include_tasks: "swpm_inifile_generate_{{ sap_swpm_ansible_role_mode }}.yml"
   tags: sap_swpm_generate_inifile
 
+# Prepare Software
+- name: SAP SWPM Pre Install - Prepare Software
+  ansible.builtin.import_tasks: prepare_software.yml
+
+# Process SWPM Configfile Template if the role mode is default or default_template
+- name: SAP SWPM Pre Install, default role modes - Process SWPM Configfile Template
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/configfile.j2"
+    dest: "{{ sap_swpm_tmpdir.path }}/inifile.params"
+    mode: '0640'
+  register: sap_swpm_cftemplate
+  when: "'default' in sap_swpm_ansible_role_mode"
+  tags: sap_swpm_generate_inifile
+
 - name: SAP SWPM Pre Install - Display the location of file 'inifile.params'
   ansible.builtin.debug:
     msg: "{{ sap_swpm_tmpdir.path }}/inifile.params"

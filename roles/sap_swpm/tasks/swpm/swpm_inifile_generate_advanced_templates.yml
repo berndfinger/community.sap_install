@@ -32,7 +32,6 @@
 
 # NOTE: Values in Dictionary Keys for instance numbers must be string using '01' single quote, otherwise SAP SWPM will crash
 
-
 # Detect variables from generated inifile
 - name: SAP SWPM advanced_templates mode - Detect Variables
   ansible.builtin.include_tasks:
@@ -41,9 +40,9 @@
       tags: sap_swpm_generate_inifile
   tags: sap_swpm_generate_inifile
 
-# Prepare Software
-- name: SAP SWPM advanced_templates mode - Prepare Software
-  ansible.builtin.include_tasks: prepare_software.yml
+# Prepare Software - now called in swpm_pre_install.yml
+#- name: SAP SWPM advanced_templates mode - Prepare Software
+#  ansible.builtin.include_tasks: prepare_software.yml
 
 # ALT: Generate complete inifile.params with all parameters from control.xml, for every SAP software product
 #- name: ALT: SAP SWPM advanced_templates mode - Generate complete inifile.params
