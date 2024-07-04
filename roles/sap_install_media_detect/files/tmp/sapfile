@@ -145,18 +145,18 @@ elif [[ "${_LSAR_FILE}" == *"unrar"* ]]; then
    _LSAR_COMMAND="${_LSAR_FILE} lb"
 fi
 
-# Identify sapcar: Try using sapcar in PATH or SAPCAR*EXE in current directory
+# Identify sapcar: Try using sapcar in PATH or SAPCAR* in current directory
 if [[ ${_SAPCAR_FILE}. == "sapcar." ]]; then
    which sapcar >/dev/null 2>&1
    RC1=$?
    if [[ ${RC1} -eq 0 ]]; then
       _SAPCAR_FILE=$(which sapcar)
    else
-      _SAPCAR_TEST=$(set -o pipefail && ls -1tr ./SAPCAR*EXE 2>/dev/null)
+      _SAPCAR_TEST=$(set -o pipefail && ls -1tr ./SAPCAR* 2>/dev/null)
       RC2=$?
       if [[ ${RC2} != 0 ]]; then
-         echo "No file with name SAPCAR*EXE in current directory found."
-         echo "Note: sapfile needs sapcar in PATH or SAPCAR*EXE in current directory - matching the system's CPU architecture - to function properly."
+         echo "No file with name SAPCAR* in current directory found."
+         echo "Note: sapfile needs sapcar in PATH or SAPCAR* in current directory - matching the system's CPU architecture - to function properly."
          echo
          usage
          exit 1
@@ -173,8 +173,8 @@ if [[ ${_SAPCAR_FILE}. == "sapcar." ]]; then
                 printf ("%s %s %s\n", a[1], b[2], b[3])}';
              done | awk '/'$(uname -m)'/{print $1}' | tail -1)
          if [[ ${_SAPCAR_ARCH}. == . ]]; then
-            echo "No file SAPCAR*EXE for the CPU architecture '$(uname -m)' in current directory found."
-            echo "Note: sapfile needs sapcar in PATH or SAPCAR*EXE in current directory - matching the system's CPU architecture - to function properly."
+            echo "No file SAPCAR* for the CPU architecture '$(uname -m)' in current directory found."
+            echo "Note: sapfile needs sapcar in PATH or SAPCAR* in current directory - matching the system's CPU architecture - to function properly."
             echo
             usage
             exit 1
@@ -241,7 +241,7 @@ for _FILE in "$@"; do
 
    SAP_FILE_TYPE_FROM_FILENAME=$(echo "${_FILE}" | awk '
    BEGIN{_sap_file_type="look_inside"}
-   /SAPCAR/&&/\.EXE/{_sap_file_type="sapcar"; exit}
+   /SAPCAR/{_sap_file_type="sapcar"; exit}
    /IMDB_SERVER/&&/\.SAR/{_sap_file_type="saphana"; exit}
    /IMDB_CLIENT/&&/\.SAR/{_sap_file_type="saphana_client"; exit}
    !/IMDB_SERVER/&&!/IMDB_CLIENT/&&/IMDB/&&/\.SAR/{_sap_file_type="saphana_other"; exit}
