@@ -103,16 +103,11 @@
     __sap_install_media_detect_fact_files_sapfile_results_extract_sapcar_hana: "{{ __sap_install_media_detect_fact_files_sapfile_results | selectattr('archive_type', 'search', 'sapcar') | selectattr('extract_archive', 'search', 'y') | selectattr('sap_file_type', 'search', 'saphana') }}"
     __sap_install_media_detect_fact_files_sapfile_results_extract_sapcar_nonhana: "{{ __sap_install_media_detect_fact_files_sapfile_results | selectattr('archive_type', 'search', 'sapcar') | selectattr('extract_archive', 'search', 'y') | rejectattr('sap_file_type', 'search', 'saphana') }}"
 
+# Note: We are no longer detecting sapcar in this phase - sapcar is already known in phase 1
 - name: SAP Install Media Detect - Prepare - Asserts
   when:
     - sap_install_media_detect_assert_after_sapfile | d(true)
   block:
-    - name: SAP Install Media Detect - Prepare - Assert that sapcar is present
-      ansible.builtin.assert:
-        that:
-          - __sap_install_media_detect_fact_files_sapfile_results | selectattr('sap_file_type', 'equalto', 'sapcar') | length > 0
-        fail_msg: "No sapcar file found"
-
     - name: SAP Install Media Detect - Prepare - Assert that swpm is present
       ansible.builtin.assert:
         that:
@@ -368,23 +363,6 @@
       when:
         - sap_install_media_detect_export == 'sapsolman_java'
 
-#- name: SAP Install Media Detect - Prepare - Identify the sapcar program
-#  ansible.builtin.set_fact:
-#    __sap_install_media_detect_fact_sapcar_path: "{{ __sap_install_media_detect_software_main_directory }}/{{ item.line_item | basename }}"
-#  loop: "{{ __sap_install_media_detect_register_files_phase_2.results }}"
-#  when: item.stdout.split(';')[1] == 'sapcar'
-
-#- name: SAP Install Media Detect - Prepare - Ensure sapcar is executable
-#  ansible.builtin.file:
-#    path: "{{ __sap_install_media_detect_fact_sapcar_path }}"
-#    owner: root
-#    group: root
-#    mode: '0755'
-
 - name: SAP Install Media Detect - Prepare - Display the file dict, phase 2
   ansible.builtin.debug:
     var: __sap_install_media_detect_fact_files_sapfile_results
-
-#- name: SAP Install Media Detect - Prepare - Display the path to the sapcar program
-#  ansible.builtin.debug:
-#    var: __sap_install_media_detect_fact_sapcar_path

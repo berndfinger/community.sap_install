@@ -8,8 +8,8 @@
 
 - name: SAP Install Media Detect - Detection completed - Set fact for SAPCAR
   ansible.builtin.set_fact:
-    sap_swpm_sapcar_path: "{{ __sap_install_media_detect_software_main_directory }}/"
-    sap_swpm_sapcar_file_name: "{{ sap_swpm_sapcar_file_name_get.stdout }}"
+    sap_swpm_sapcar_path: "{{ __sap_install_media_detect_fact_sapcar_path | dirname }}/"
+    sap_swpm_sapcar_file_name: "{{ __sap_install_media_detect_fact_sapcar_path | basename }}"
 
 - name: SAP Install Media Detect - Detection completed - Set fact for SWPM, move_or_copy_archives parameter set
   ansible.builtin.set_fact:
@@ -18,8 +18,6 @@
 #    sap_swpm_install_directory: "{{ __sap_install_media_detect_software_main_directory }}/sap_swpm_download_basket/" # for sap_swpm Ansible Role
     sap_swpm_install_directory: "{{ sap_swpm_software_path }}/"
     sap_swpm_swpm_path: "{{ __sap_install_media_detect_software_main_directory }}/sap_swpm/" # for sap_swpm Ansible Role
-#    sap_swpm_sapcar_path: "{{ __sap_install_media_detect_software_main_directory }}/sap_swpm/" # for sap_swpm Ansible Role
-#    sap_swpm_sapcar_path: "{{ sap_swpm_software_path }}/" # for sap_swpm Ansible Role
   ignore_errors: true
   when:
     - sap_install_media_detect_move_or_copy_archives
