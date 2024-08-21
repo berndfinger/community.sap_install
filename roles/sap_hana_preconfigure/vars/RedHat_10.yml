@@ -2,7 +2,7 @@
 ---
 
 # supported RHEL 9 minor releases for SAP HANA:
-__sap_hana_preconfigure_supported_rhel_minor_releases:
+__sap_hana_preconfigure_supported_rhel_minor_releases: []
 
 # required repos for RHEL 9:
 __sap_hana_preconfigure_req_repos_redhat_10_0_x86_64:
