@@ -1,0 +1,11 @@
+uuidd
+libnsl
+tcsh
+psmisc
+nfs-utils
+bind-utils
+compat-sap-c++-9
+compat-sap-c++-10
+compat-sap-c++-11
+langpacks-en
+glibc-langpack-en

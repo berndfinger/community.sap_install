@@ -1,0 +1,8 @@
+uuidd
+libnsl
+tcsh
+psmisc
+nfs-utils
+bind-utils
+langpacks-en
+glibc-langpack-en

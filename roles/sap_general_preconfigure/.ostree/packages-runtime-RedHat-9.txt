@@ -1,0 +1,11 @@
+uuidd
+libnsl
+tcsh
+psmisc
+nfs-utils
+bind-utils
+hostname
+tuned
+libxcrypt-compat
+langpacks-en
+glibc-langpack-en

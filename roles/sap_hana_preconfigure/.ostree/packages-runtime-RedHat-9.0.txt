@@ -1,0 +1,16 @@
+expect
+gtk2
+krb5-workstation
+libatomic
+libcanberra-gtk2
+libtool-ltdl
+numactl
+PackageKit-gtk3-module
+xorg-x11-xauth
+chkconfig
+compat-openssl11
+graphviz
+iptraf-ng
+lm_sensors
+nfs-utils
+tuned-profiles-sap-hana
