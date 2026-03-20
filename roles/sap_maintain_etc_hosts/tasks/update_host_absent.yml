@@ -7,11 +7,11 @@
           and thishost.node_ip | regex_search(sap_maintain_etc_hosts_regexp_ipv4) | length > 0)
         or (thishost.node_ip | regex_search(sap_maintain_etc_hosts_regexp_ipv6) is not none
           and thishost.node_ip | regex_search(sap_maintain_etc_hosts_regexp_ipv6) | length > 0)
-    msg: |
-      "The IP address of this host does not have a correct format.
-       Configure the IP address appropriately in of the following variables:
-       - sap_ip
-       - sap_maintain_etc_hosts_list, member node_ip"
+    fail_msg: |
+      FAIL: The IP address of this host does not have a correct format!
+        Configure the IP address appropriately in of the following variables:
+        - sap_ip
+        - sap_maintain_etc_hosts_list, member node_ip
   when: thisnode.node_ip is defined
 
 - name: Ensure that either IP address or hostname is defined
@@ -19,7 +19,9 @@
     that: >
       ((thishost.node_ip is defined) and (thishost.node_name is undefined) and (thishost.node_domain is undefined)) or
       ((thishost.node_ip is undefined) and (thishost.node_name is defined))
-    msg: "Invalid delete item. Please define either node_ip only or node_name. In the latter case node_domain is optional."
+    fail_msg: |
+      FAIL: Invalid delete item!
+        Define either node_ip only or node_name. In the latter case, node_domain is optional.
 
 - name: Ensure that all entries with IP {{ thishost.node_ip | d('undefined') }} in /etc/hosts are absent
   ansible.builtin.lineinfile:

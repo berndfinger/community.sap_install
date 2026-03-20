@@ -16,9 +16,11 @@ galaxy_info:
         - "7"
         - "8"
         - "9"
+        - "10"
     - name: "SLES"
       versions:
         - "15"
+        - "16"
 
   galaxy_tags:
     - rhel
