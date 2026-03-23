@@ -37,7 +37,7 @@
       "{{ thishost.node_domain if thishost.node_domain is defined and thishost.node_domain != ''
         else (sap_domain if sap_domain is defined and sap_domain != '' else ansible_facts['domain'] | d('')) }}"
 
-- name: Verify that the DNS domain ist set
+- name: Verify that the DNS domain is set
   ansible.builtin.assert:
     that: >
       not( ( __sap_maintain_etc_hosts_fact_domain is undefined) or
