@@ -128,7 +128,7 @@
     backup: true
   when:
     - not ansible_check_mode
-    - __sap_maintain_etc_hosts_fact_ip_count | int == 1
+    - __sap_maintain_etc_hosts_fact_ip_count | int <= 1
   become_user: root
   become: true
   loop:
@@ -145,7 +145,7 @@
     backup: true
   when:
     - not ansible_check_mode
-    - __sap_maintain_etc_hosts_fact_ip_count | int == 1
+    - __sap_maintain_etc_hosts_fact_ip_count | int <= 1
   become_user: root
   become: true
 
