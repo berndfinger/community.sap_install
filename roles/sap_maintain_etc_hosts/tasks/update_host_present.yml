@@ -150,9 +150,15 @@
   become: true
 
 # After all nodes are added or deleted, run the consistency check against the hosts file
+
+- name: Get the content /etc/hosts after possible modification
+  ansible.builtin.slurp:
+    src: "{{ __sap_maintain_etc_hosts_file }}"
+  register: __sap_maintain_etc_hosts_register_file_post_modification
+
 - name: Check for duplicate or missing entries of hostname and fqdn in {{ __sap_maintain_etc_hosts_file }}
   ansible.builtin.assert:
-    that: (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
+    that: (__sap_maintain_etc_hosts_register_file_post_modification['content'] | b64decode).split('\n')
         | reject('match', '^#')
         | select('search', '\\s' ~ __sap_maintain_etc_hosts_line_item ~ '(\\s|$)')
         | length == 1
@@ -168,7 +174,7 @@
 - name: Perform the hosts file completeness check
   ansible.builtin.set_fact:
     __sap_maintain_etc_hosts_fact_completeness_count:
-      "{{ (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
+      "{{ (__sap_maintain_etc_hosts_register_file_post_modification['content'] | b64decode).split('\n')
         | reject('match', '^\\s*#')
         | select('search', thishost.node_ip)
         | select('search', thishost.node_name ~ '.' ~ __sap_maintain_etc_hosts_fact_domain)
