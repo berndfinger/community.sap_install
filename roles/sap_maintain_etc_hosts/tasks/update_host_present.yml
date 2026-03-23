@@ -91,7 +91,7 @@
 - name: Overwrite existing aliases
   when: __sap_maintain_etc_hosts_fact_alias_mode == "overwrite"
   ansible.builtin.set_fact:
-    __sap_maintain_etc_hosts_fact_aliases: "{{ thishost.node_aliases | d([]) | unique | join(' ') }}"
+    __sap_maintain_etc_hosts_fact_aliases: "{{ thishost.aliases | d([]) | unique | join(' ') }}"
 
 - name: Display host, DNS domainname and IP address before the modification
   ansible.builtin.debug:
