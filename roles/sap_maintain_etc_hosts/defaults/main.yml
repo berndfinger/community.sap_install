@@ -42,9 +42,11 @@
 
 # END: Default Variables for sap_maintain_etc_hosts
 
+# Default delimiter for /etc/hosts
+sap_maintain_etc_hosts_delimiter: " "
+
 # Default Value is the definition of the cluster nodes in sap_ha_pacemaker_cluster. If that is not defined
 # the role creates a default value from ansible_facts
-
 sap_maintain_etc_hosts_list: "{{ sap_hana_cluster_nodes | default(sap_ha_pacemaker_cluster_cluster_nodes) | default([]) }}"
 
 # regex patterns for IP address validation:

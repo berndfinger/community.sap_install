@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
-- name: Ensure required defaults are read from setup module
+- name: Hosts File - Ensure required defaults are read from setup module
   when: >
     not ((ansible_facts['hostname'] is defined) and
     (ansible_facts['domain'] is defined) and
@@ -16,66 +16,115 @@
       - "ansible_facts['domain']"
       - "ansible_facts['default_ipv4']"
 
-- name: Ensure sap_maintain_etc_hosts_list is correctly defined
+- name: Hosts File - Ensure sap_maintain_etc_hosts_list is correctly defined
   when: sap_maintain_etc_hosts_list is defined and sap_maintain_etc_hosts_list | length > 0
   block:
-    - name: Get list of hosts to be added with no state definition
+    - name: Hosts File - Ensure 'node_ip' elements are unique
+      ansible.builtin.assert:
+        that: __defined_node_ips | length == __defined_node_ips | unique | length
+        fail_msg: |
+          FAIL: Duplicate 'node_ip' values found:
+          {% for __node_ip in __defined_node_ips | unique %}
+            {% if __defined_node_ips | select('equalto', __node_ip) | list | length > 1 %}
+            - {{ __node_ip }} (appears {{ __defined_node_ips | select('equalto', __node_ip) | list | length }} times)
+            {% endif %}
+          {% endfor %}
+      vars:
+        __defined_node_ips: "{{ sap_maintain_etc_hosts_list | map(attribute='node_ip', default='') | select | list }}"
+
+    - name: Hosts File - Ensure 'node_name' elements are unique
+      ansible.builtin.assert:
+        that: __defined_node_names | length == __defined_node_names | unique | length
+        fail_msg: |
+          FAIL: Duplicate 'node_name' values found:
+          {% for __node_name in __defined_node_names | unique %}
+            {% if __defined_node_names | select('equalto', __node_name) | list | length > 1 %}
+            - {{ __node_name }} (appears {{ __defined_node_names | select('equalto', __node_name) | list | length }} times)
+            {% endif %}
+          {% endfor %}
+      vars:
+        __defined_node_names: "{{ sap_maintain_etc_hosts_list | map(attribute='node_name', default='') | select | list }}"
+
+    - name: Hosts File - Ensure either 'node_ip' or 'node_name' is defined for hosts with state='absent'
+      ansible.builtin.assert:
+        that: __absent_item.node_ip is defined or __absent_item.node_name is defined
+        fail_msg: "FAIL: member with state 'absent' is defined without 'node_ip' or 'node_name': {{ __absent_item }}."
+      loop: "{{ sap_maintain_etc_hosts_list }}"
+      loop_control:
+        loop_var: __absent_item
+
+    - name: Hosts File - Get list of hosts to be added with no state definition
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_present: "{{ sap_maintain_etc_hosts_list | selectattr('state', 'undefined') | list }}"
 
-    - name: Add list of hosts with state=present
+    - name: Hosts File - Add list of hosts with state=present
       ansible.builtin.set_fact:
-        __sap_maintain_etc_hosts_fact_present: "{{ __sap_maintain_etc_hosts_fact_present +
-          (sap_maintain_etc_hosts_list | difference(__sap_maintain_etc_hosts_fact_present) | selectattr('state', 'eq', 'present') | list) }}"
+        __sap_maintain_etc_hosts_fact_present:
+          "{{ __sap_maintain_etc_hosts_fact_present
+           + (sap_maintain_etc_hosts_list
+             | difference(__sap_maintain_etc_hosts_fact_present)
+             | selectattr('state', 'eq', 'present') | list)
+           }}"
 
-    - name: Debug list of hosts to be present
+    - name: Hosts File - Display all hosts to be present
       ansible.builtin.debug:
         msg:
           - "{{ __sap_maintain_etc_hosts_fact_present }}"
         verbosity: 2
 
-    - name: Ensure no duplicate IPs are in the list for adding to hosts
+    - name: Hosts File - Ensure 'node_ip' and 'node_name' are defined for hosts with state!='absent'
       ansible.builtin.assert:
         that:
-          (__sap_maintain_etc_hosts_fact_present | map(attribute='node_ip') | length) ==
-          (__sap_maintain_etc_hosts_fact_present | map(attribute='node_ip') | unique | length)
-        fail_msg: "FAIL: You have defined duplicate ip addresses to be created!"
+          - __present_item.node_ip is defined
+          - __present_item.node_name is defined
+        fail_msg: "FAIL: member with state != 'absent' is defined without 'node_ip' or 'node_name': {{ __present_item }}."
+      loop: "{{ __sap_maintain_etc_hosts_fact_present }}"
+      loop_control:
+        loop_var: __present_item
 
-    - name: Ensure no duplicate hostnames are in the list for adding to hosts
-      ansible.builtin.assert:
-        that:
-          (__sap_maintain_etc_hosts_fact_present | map(attribute='node_name') | length) ==
-          (__sap_maintain_etc_hosts_fact_present | map(attribute='node_name') | unique | length)
-        fail_msg: "FAIL: You have defined duplicate hostnames to be created!"
-
-    - name: Set hosts list variable from sap_maintain_etc_hosts_list
+    - name: Hosts File - Set hosts list variable from sap_maintain_etc_hosts_list
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_hosts_list: "{{ sap_maintain_etc_hosts_list }}"
 
-# set defaults for local host if sap_maintain_etc_hosts_list is empty
-- name: Set hosts list variable to defaults
+- name: Hosts File - Get the content of /etc/hosts
+  ansible.builtin.slurp:
+    src: "{{ __sap_maintain_etc_hosts_file }}"
+  register: __sap_maintain_etc_hosts_register_file
+
+# Set defaults for local host if sap_maintain_etc_hosts_list is empty
+- name: Hosts File - Set vars if sap_maintain_etc_hosts_list is empty
   when: >
     ( sap_maintain_etc_hosts_list is undefined) or
     ( sap_maintain_etc_hosts_list is none) or
     ( sap_maintain_etc_hosts_list | trim == '') or
     ( sap_maintain_etc_hosts_list | length == 0)
-  ansible.builtin.set_fact:
-    __sap_maintain_etc_hosts_fact_hosts_list:
-      - node_ip: "{{ ansible_facts['default_ipv4'].address }}"
-        node_name: "{{ ansible_facts['hostname'] }}"
-        node_domain: "{{ sap_domain | default(ansible_facts['domain']) }}"
-        node_comment: "managed by Ansible role sap_maintain_etc_hosts"
-        state: present
+  block:
+    - name: Hosts File - Preserve existing comment if no new comment is provided
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_comment:
+          "{{ (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
+            | select('match', '^' ~ ansible_facts['default_ipv4'].address ~ '\\s')
+            | map('regex_search', '#.*$')
+            | select('string')
+            | first
+            | regex_replace('^# ', '')
+            | d('') | trim }}"
 
-- name: Get the content of /etc/hosts
-  ansible.builtin.slurp:
-    src: "{{ __sap_maintain_etc_hosts_file }}"
-  register: __sap_maintain_etc_hosts_register_file
+    - name: Hosts File - Set hosts list variable to defaults
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_hosts_list:
+          - node_ip: "{{ ansible_facts['default_ipv4'].address }}"
+            node_name: "{{ ansible_facts['hostname'] }}"
+            node_domain: "{{ sap_domain | default(ansible_facts['domain']) }}"
+            node_comment: "{{ __sap_maintain_etc_hosts_fact_comment
+              if __sap_maintain_etc_hosts_fact_comment | length > 0
+              else '# managed by Ansible role sap_maintain_etc_hosts' }}"
+            state: present
 
-- name: Add entry to "{{ __sap_maintain_etc_hosts_file }}"
+- name: Hosts File - Add entry to "{{ __sap_maintain_etc_hosts_file }}"
+  ansible.builtin.include_tasks:
+    file: update_host_{{ __etc_hosts_item.state | default('present') }}.yml
   loop: "{{ __sap_maintain_etc_hosts_fact_hosts_list }}"
   loop_control:
-    label: "{{ thishost.node_name | d(thishost.node_ip) }}"
-    loop_var: thishost
-  ansible.builtin.include_tasks:
-    file: update_host_{{ thishost.state | default('present') }}.yml
+    label: "{{ __etc_hosts_item.node_name | d(__etc_hosts_item.node_ip) }}"
+    loop_var: __etc_hosts_item

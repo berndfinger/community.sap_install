@@ -84,6 +84,14 @@ argument_specs:
             - node_name: host2
               state: absent
 
+      sap_maintain_etc_hosts_delimiter:
+        default: " "
+        description:
+          - Delimiter for /etc/hosts fields
+        choices:
+          - " "
+          - "\t"
+
       sap_maintain_etc_hosts_regexp_ipv4:
         default: '^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$'
         description:
