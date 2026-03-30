@@ -20,7 +20,7 @@
         or (__etc_hosts_item.node_ip | regex_search(sap_maintain_etc_hosts_regexp_ipv6) is not none
           and __etc_hosts_item.node_ip | regex_search(sap_maintain_etc_hosts_regexp_ipv6) | length > 0)
     fail_msg: |
-      FAIL: The IP address of this host does not have a correct format!
+      FAIL: The IP address {{ __etc_hosts_item.node_ip }} is not of the expected format!
         Configure the IP address appropriately in of the following variables:
         - sap_ip
         - sap_maintain_etc_hosts_list, member node_ip
