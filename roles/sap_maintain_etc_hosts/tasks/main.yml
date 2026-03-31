@@ -16,6 +16,11 @@
       - "ansible_facts['domain']"
       - "ansible_facts['default_ipv4']"
 
+- name: Hosts File - Get the content of /etc/hosts
+  ansible.builtin.slurp:
+    src: "{{ __sap_maintain_etc_hosts_file }}"
+  register: __sap_maintain_etc_hosts_register_file
+
 - name: Hosts File - Ensure sap_maintain_etc_hosts_list is correctly defined
   when: sap_maintain_etc_hosts_list is defined and sap_maintain_etc_hosts_list | length > 0
   block:
@@ -53,7 +58,9 @@
             {% endif %}
           {% endfor %}
       vars:
-        __defined_node_names: "{{ sap_maintain_etc_hosts_list | map(attribute='node_name', default='') | select | list }}"
+        __defined_node_names: "{{ sap_maintain_etc_hosts_list
+                                | map(attribute='node_name', default='')
+                                | select | list }}"
 
     - name: Hosts File - Ensure 'aliases' elements are unique
       ansible.builtin.assert:
@@ -66,7 +73,9 @@
             {% endif %}
           {% endfor %}
       vars:
-        __defined_aliases: "{{ sap_maintain_etc_hosts_list | map(attribute='aliases', default='') | select | flatten }}"
+        __defined_aliases: "{{ sap_maintain_etc_hosts_list
+                             | map(attribute='aliases', default='')
+                             | select | flatten }}"
 
     - name: Hosts File - Ensure either 'node_ip' or 'node_name' is defined for hosts with state='absent'
       ansible.builtin.assert:
@@ -108,11 +117,6 @@
     - name: Hosts File - Set hosts list variable from sap_maintain_etc_hosts_list
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_hosts_list: "{{ sap_maintain_etc_hosts_list }}"
-
-- name: Hosts File - Get the content of /etc/hosts
-  ansible.builtin.slurp:
-    src: "{{ __sap_maintain_etc_hosts_file }}"
-  register: __sap_maintain_etc_hosts_register_file
 
 # Set defaults for local host if sap_maintain_etc_hosts_list is empty
 - name: Hosts File - Set vars if sap_maintain_etc_hosts_list is empty

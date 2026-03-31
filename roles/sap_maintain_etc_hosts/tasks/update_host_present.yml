@@ -55,8 +55,9 @@
         - sap_domain
         - sap_maintain_etc_hosts_list, member node_domain
 
-- name: Hosts File - Presence - Set default values for comment and alias mode
+- name: Hosts File - Presence - Set the alias mode and the content of the comment
   ansible.builtin.set_fact:
+    __sap_maintain_etc_hosts_fact_alias_mode: "{{ __etc_hosts_item.alias_mode | default('merge') }}"
     __sap_maintain_etc_hosts_fact_comment: >-
       {{
         (('#' if (__etc_hosts_item.node_comment is defined or __etc_hosts_item.hana_site is defined) else '') +
@@ -64,7 +65,6 @@
         ((' ' + __etc_hosts_item.hana_site) if __etc_hosts_item.hana_site is defined else ''))
         | trim
       }}
-    __sap_maintain_etc_hosts_fact_alias_mode: "{{ __etc_hosts_item.alias_mode | default('merge') }}"
 
 - name: Hosts File - Presence - Merge existing aliases with new alias list
   when: __sap_maintain_etc_hosts_fact_alias_mode != "overwrite"
