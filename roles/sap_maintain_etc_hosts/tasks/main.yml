@@ -144,7 +144,7 @@
               else 'managed by Ansible role sap_maintain_etc_hosts' }}"
             state: present
 
-- name: Hosts File - Add entry to "{{ __sap_maintain_etc_hosts_file }}"
+- name: Hosts File - Maintain entries in "{{ __sap_maintain_etc_hosts_file }}"
   ansible.builtin.include_tasks:
     file: update_host_{{ __etc_hosts_item.state | default('present') }}.yml
   loop: "{{ __sap_maintain_etc_hosts_fact_hosts_list }}"
