@@ -106,7 +106,7 @@ If the value `sap_hana_cluster_nodes`or `sap_ha_pacemaker_cluster_cluster_nodes`
 
 Mandatory list of nodes in form of dictionaries to be added or removed in `/etc/hosts` file.
 
-Following dictionary keys can be defined:
+The following dictionary keys can be defined:
 
 - **node_ip**<br>
     IP address of the managed node.<br>

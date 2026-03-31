@@ -77,7 +77,7 @@ argument_specs:
               aliases:
                 - alias1
                 - anotheralias2
-              node_comment: "Here comes text after hashsign"
+              node_comment: "This is a comment"
               state: present
             - node_ip: 1.2.3.5
               state: absent

@@ -55,6 +55,19 @@
       vars:
         __defined_node_names: "{{ sap_maintain_etc_hosts_list | map(attribute='node_name', default='') | select | list }}"
 
+    - name: Hosts File - Ensure 'aliases' elements are unique
+      ansible.builtin.assert:
+        that: __defined_aliases | length == __defined_aliases | unique | length
+        fail_msg: |
+          FAIL: Duplicate 'aliases' values found:
+          {% for __aliases in __defined_aliases | unique %}
+            {% if __defined_aliases | select('equalto', __aliases) | list | length > 1 %}
+            - {{ __aliases }} (appears {{ __defined_aliases | select('equalto', __aliases) | list | length }} times)
+            {% endif %}
+          {% endfor %}
+      vars:
+        __defined_aliases: "{{ sap_maintain_etc_hosts_list | map(attribute='aliases', default='') | select | flatten }}"
+
     - name: Hosts File - Ensure either 'node_ip' or 'node_name' is defined for hosts with state='absent'
       ansible.builtin.assert:
         that: __absent_item.node_ip is defined or __absent_item.node_name is defined
