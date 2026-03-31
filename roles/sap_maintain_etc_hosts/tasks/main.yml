@@ -118,7 +118,7 @@
             node_domain: "{{ sap_domain | default(ansible_facts['domain']) }}"
             node_comment: "{{ __sap_maintain_etc_hosts_fact_comment
               if __sap_maintain_etc_hosts_fact_comment | length > 0
-              else '# managed by Ansible role sap_maintain_etc_hosts' }}"
+              else 'managed by Ansible role sap_maintain_etc_hosts' }}"
             state: present
 
 - name: Hosts File - Add entry to "{{ __sap_maintain_etc_hosts_file }}"
