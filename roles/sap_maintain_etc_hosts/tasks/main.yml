@@ -32,6 +32,16 @@
       vars:
         __defined_node_ips: "{{ sap_maintain_etc_hosts_list | map(attribute='node_ip', default='') | select | list }}"
 
+    - name: Hosts File - Ensure 'node_name' elements do not contain a dot
+      ansible.builtin.assert:
+        that: "'.' not in __hosts_item.node_name"
+        fail_msg: |
+          FAIL: node_name '{{ __hosts_item.node_name }}' contains a dot, which is not allowed!"
+      loop: "{{ sap_maintain_etc_hosts_list }}"
+      loop_control:
+        loop_var: __hosts_item
+      when: __hosts_item.node_name is defined
+
     - name: Hosts File - Ensure 'node_name' elements are unique
       ansible.builtin.assert:
         that: __defined_node_names | length == __defined_node_names | unique | length
@@ -49,7 +59,7 @@
       ansible.builtin.assert:
         that: __absent_item.node_ip is defined or __absent_item.node_name is defined
         fail_msg: "FAIL: member with state 'absent' is defined without 'node_ip' or 'node_name': {{ __absent_item }}."
-      loop: "{{ sap_maintain_etc_hosts_list }}"
+      loop: "{{ sap_maintain_etc_hosts_list | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') }}"
       loop_control:
         loop_var: __absent_item
 
