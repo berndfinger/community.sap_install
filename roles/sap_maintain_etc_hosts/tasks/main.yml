@@ -77,6 +77,67 @@
                              | map(attribute='aliases', default='')
                              | select | flatten }}"
 
+    # The next four tasks ensure that for a host to be present, no host name is defined in sap_maintain_etc_hosts_list
+    # for which a different IP address is already present in /etc/hosts
+    - name: Hosts File - Assign /etc/hosts entries to intermediate variable
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_hosts_intermediate:
+          "{{
+            (__sap_maintain_etc_hosts_register_file.content | b64decode).split('\n')
+            | reject('search', '^\\s*$')
+            | reject('search', '^\\s*#')
+            | map('regex_replace', '\\s*#.*$', '')
+            | map('trim')
+            | select('match', '^[0-9]')
+            | map('split')
+            | list
+          }}"
+
+    - name: Hosts File - Create list of host names and their IP addresses
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_hosts_ip_list: >-
+          {%- set result = [] -%}
+          {%- for parts in __sap_maintain_etc_hosts_fact_hosts_intermediate -%}
+            {%- if parts | length > 1 -%}
+              {%- for hostname in parts[1:] -%}
+                {%- set _ = result.append({'ip': parts[0], 'hostname': hostname}) -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ result }}
+
+    - name: Hosts File - Identify IP address mismatches between sap_maintain_etc_hosts_list and /etc/hosts entries
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_ip_mismatches: >-
+          {%- set mismatches = [] -%}
+          {%- for __node in sap_maintain_etc_hosts_list -%}
+            {%- if (__node.state is not defined or __node.state == 'present') and __node.node_name is defined -%}
+              {%- set matching_hosts = [] -%}
+              {%- for __host in __sap_maintain_etc_hosts_fact_hosts_ip_list -%}
+                {%- if (__host.state is not defined or __host.state == 'present') and __host.hostname == __node.node_name -%}
+                  {%- set _ = matching_hosts.append(__host) -%}
+                {%- endif -%}
+              {%- endfor -%}
+              {%- for __host in matching_hosts -%}
+                {%- if __host.ip != __node.node_ip -%}
+                  {%- set _ = mismatches.append({
+                    'hostname': __node.node_name,
+                    'defined_ip': __node.node_ip,
+                    'actual_ip': __host.ip
+                  }) -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ mismatches }}
+
+    - name: Hosts File - Assert that there are no IP address mismatches
+      ansible.builtin.assert:
+        that:
+          - __sap_maintain_etc_hosts_fact_ip_mismatches | length == 0
+        fail_msg: "FAIL: IP address mismatches found: {{ __sap_maintain_etc_hosts_fact_ip_mismatches }}"
+        success_msg: "PASS: All IP addresses match correctly"
+
     - name: Hosts File - Ensure either 'node_ip' or 'node_name' is defined for hosts with state='absent'
       ansible.builtin.assert:
         that: __absent_item.node_ip is defined or __absent_item.node_name is defined
