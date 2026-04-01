@@ -114,7 +114,7 @@
 - name: Hosts File - Presence - Report if there is more than one line with the IP address
   ansible.builtin.debug:
     msg:
-      - "INFO: More than one line containing '{{ __etc_hosts_item.node_ip }}'. File {{ __sap_maintain_etc_hosts_file }} will not be modified."
+      - "INFO: More than one line containing '{{ __etc_hosts_item.node_ip }}'. File {{ __sap_maintain_etc_hosts_file }} will not be modified for this IP address."
   when:
     - not ansible_check_mode
     - __sap_maintain_etc_hosts_fact_ip_count | int > 1
