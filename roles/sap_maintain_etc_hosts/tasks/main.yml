@@ -165,7 +165,7 @@
           - "{{ __sap_maintain_etc_hosts_fact_present }}"
         verbosity: 2
 
-    - name: Hosts File - Ensure 'node_ip' and 'node_name' are defined for hosts with state!='absent'
+    - name: Hosts File - Ensure 'node_ip' and 'node_name' are defined for hosts to be added
       ansible.builtin.assert:
         that:
           - __present_item.node_ip is defined
