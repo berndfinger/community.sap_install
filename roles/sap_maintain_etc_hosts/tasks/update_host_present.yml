@@ -63,9 +63,12 @@
     __sap_maintain_etc_hosts_fact_alias_mode: "{{ __etc_hosts_item.alias_mode | default('merge') }}"
     __sap_maintain_etc_hosts_fact_comment: >-
       {{
-        (('#' if (__etc_hosts_item.node_comment is defined or __etc_hosts_item.hana_site is defined) else '') +
-        ((' ' + __etc_hosts_item.node_comment) if __etc_hosts_item.node_comment is defined else '') +
-        ((' ' + __etc_hosts_item.hana_site) if __etc_hosts_item.hana_site is defined else ''))
+        (('#' if ((__etc_hosts_item.node_comment | d('') | length > 0)
+           or (__etc_hosts_item.hana_site | d('') | length > 0)) else '') +
+        ((' ' + __etc_hosts_item.node_comment)
+           if (__etc_hosts_item.node_comment | d('') | length > 0) else '') +
+        ((' ' + __etc_hosts_item.hana_site)
+           if (__etc_hosts_item.hana_site | d('') | length > 0) else ''))
         | trim
       }}
 

@@ -26,8 +26,8 @@
 #     `overwrite`: overwrites the aliases of the node.
 #      Not used when state is absent
 # - node_comment
-#      default: managed by ansible sap_maintain_etc_hosts role`
-#      String which is appended to line in hosts after comment string
+#      default: managed by Ansible role sap_maintain_etc_hosts
+#      String which is appended to the hosts line after '# '
 #      Not used when state is absent
 # - hana_site
 #      if set (e.g. for configuring cluster) it is appended to the comment
@@ -44,6 +44,9 @@
 
 # Default delimiter for /etc/hosts
 sap_maintain_etc_hosts_delimiter: " "
+
+# Default comment
+sap_maintain_etc_hosts_default_comment: "managed by Ansible role sap_maintain_etc_hosts"
 
 # Default Value is the definition of the cluster nodes in sap_ha_pacemaker_cluster. If that is not defined
 # the role creates a default value from ansible_facts

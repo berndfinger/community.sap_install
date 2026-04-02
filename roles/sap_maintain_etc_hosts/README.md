@@ -150,7 +150,7 @@ The following dictionary keys can be defined:
     _Optional_ for adding new entries to `/etc/hosts`.
 
     - _Type:_ `string`
-    - _Default:_ `managed by ansible sap_maintain_etc_hosts role`
+    - _Default:_ (The content of the variable sap_maintain_etc_hosts_default_comment)
 
 - **hana_site**<br>
     Used by [sap_ha_pacemaker_cluster](https://github.com/sap-linuxlab/community.sap_install/tree/main/roles/sap_ha_pacemaker_cluster) and it is appended to `node_comment`<br>
@@ -169,4 +169,33 @@ The following dictionary keys can be defined:
 
     - _Type:_ `string`
     - _Default:_ `present`
+
+### sap_maintain_etc_hosts_delimiter
+    Delimiter for /etc/hosts fields
+    _Optional_
+
+    - _Type:_ `string`
+    - _Default:_ ` `
+    - _Choices:_
+      - ` `
+      - `\t`
+
+### sap_maintain_etc_hosts_default_comment
+    Default string for comments
+    _Optional_
+
+    - _Type:_ `string`
+
+### sap_maintain_etc_hosts_regexp_ipv4
+    regex pattern for IPv4 address validation
+    _Optional_
+
+    - _Type:_ `string`
+    - _Default:_ `^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$`
+### sap_maintain_etc_hosts_regexp_ipv6
+    regex pattern for IPv6 address validation
+    _Optional_
+
+    - _Type:_ `string`
+    - _Default:_ `^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?::[0-9a-fA-F]{1,4}){1,7}|::)$`
 <!-- END Role Variables -->
