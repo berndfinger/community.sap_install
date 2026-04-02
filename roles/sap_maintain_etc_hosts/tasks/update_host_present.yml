@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
+# We only allow one line containing sap_ip:
 - name: Hosts File - Presence - Verify that 'node_ip' is set
   ansible.builtin.assert:
     that:
@@ -71,7 +72,7 @@
 - name: Hosts File - Presence - Merge existing aliases with new alias list if IP address and hostname are unchanged
   when: __sap_maintain_etc_hosts_fact_alias_mode != "overwrite"
   block:
-    - name: Hosts File - Presence - Check if IP and hostname exist in /etc/hosts
+    - name: Hosts File - Presence - Check if IP and hostname exist in {{ __sap_maintain_etc_hosts_file }}
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_ip_hostname_exists:
           "{{ (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
@@ -84,11 +85,11 @@
     - name: Hosts File - Presence - Notify about aliases to be overwritten
       ansible.builtin.debug:
         msg: |
-          "INFO: Because the hostname differs from the existing hostname for the IP address in /etc/hosts,
+          "INFO: Because the hostname differs from the existing hostname for the IP address in {{ __sap_maintain_etc_hosts_file }},
            the existing aliases will not be preserved"
       when: not __sap_maintain_etc_hosts_fact_ip_hostname_exists
 
-    - name: Hosts File - Presence - Extract existing aliases from /etc/hosts for {{ __etc_hosts_item.node_ip }}
+    - name: Hosts File - Presence - Extract existing aliases from {{ __sap_maintain_etc_hosts_file }} for {{ __etc_hosts_item.node_ip }}
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_existing_aliases:
           "{{ (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
@@ -123,32 +124,12 @@
       - "aliases    = '{{ __sap_maintain_etc_hosts_fact_aliases }}'"
       - "alias mode = '{{ __sap_maintain_etc_hosts_fact_alias_mode }}'"
 
-# We allow more than one line containing sap_ip:
-- name: Hosts File - Presence - Count entries for {{ __etc_hosts_item.node_ip }}
-  ansible.builtin.set_fact:
-    __sap_maintain_etc_hosts_fact_ip_count:
-      "{{ (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
-        | select('match', '^' ~ (__etc_hosts_item.node_ip | regex_escape) ~ '\\s')
-        | list | length }}"
-  when: not ansible_check_mode
-
-- name: Hosts File - Presence - Report if there is more than one line with the IP address
-  ansible.builtin.debug:
-    msg:
-      - "INFO: More than one line containing '{{ __etc_hosts_item.node_ip }}'. File {{ __sap_maintain_etc_hosts_file }} will not be modified for this IP address."
-  when:
-    - not ansible_check_mode
-    - __sap_maintain_etc_hosts_fact_ip_count | int > 1
-
 - name: Hosts File - Presence - Ensure that node_name is not part of the localhost entry
   ansible.builtin.replace:
     path: "{{ __sap_maintain_etc_hosts_file }}"
     regexp: '^(127.0.0.1 .*)\s{{ line_item }}(\s.*)$'
     replace: '\1\2'
     backup: true
-  when:
-    - not ansible_check_mode
-    - __sap_maintain_etc_hosts_fact_ip_count | int <= 1
   become_user: root
   become: true
   loop:
@@ -156,6 +137,8 @@
     - "{{ __etc_hosts_item.node_name }}"
   loop_control:
     loop_var: line_item
+  when:
+    - not ansible_check_mode
 
 - name: Hosts File - Presence - Ensure that the entry for node_ip in {{ __sap_maintain_etc_hosts_file }} is correct
   ansible.builtin.lineinfile:
@@ -172,13 +155,12 @@
     backup: true
   when:
     - not ansible_check_mode
-    - __sap_maintain_etc_hosts_fact_ip_count | int <= 1
   become_user: root
   become: true
 
 # After all nodes are added or deleted, run the consistency check against the hosts file
 
-- name: Hosts File - Presence - Get the content of /etc/hosts again after possible modification
+- name: Hosts File - Presence - Get the content of {{ __sap_maintain_etc_hosts_file }} again after possible modification
   ansible.builtin.slurp:
     src: "{{ __sap_maintain_etc_hosts_file }}"
   register: __sap_maintain_etc_hosts_register_file_post_modification

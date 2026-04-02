@@ -23,7 +23,7 @@
       FAIL: Invalid delete item!
         Define either node_ip only or node_name. In the latter case, node_domain is optional.
 
-- name: Hosts File - Absence - Ensure that all entries with IP {{ __etc_hosts_item.node_ip | d('undefined') }} in /etc/hosts are absent
+- name: Hosts File - Absence - Ensure that all entries with IP {{ __etc_hosts_item.node_ip | d('undefined') }} in {{ __sap_maintain_etc_hosts_file }} are absent
   ansible.builtin.lineinfile:
     path: "{{ __sap_maintain_etc_hosts_file }}"
     regexp: '^{{ __etc_hosts_item.node_ip }}\s'
@@ -36,7 +36,7 @@
   become_user: root
   become: true
 
-- name: Hosts File - Absence - Ensure that all entries with name {{ __etc_hosts_item.node_name | d('undefined') }} in /etc/hosts are absent
+- name: Hosts File - Absence - Ensure that all entries with name {{ __etc_hosts_item.node_name | d('undefined') }} in {{ __sap_maintain_etc_hosts_file }} are absent
   ansible.builtin.lineinfile:
     path: "{{ __sap_maintain_etc_hosts_file }}"
     regexp: '^.*\s{{ __etc_hosts_item.node_name }}\s'
@@ -50,7 +50,7 @@
   become_user: root
   become: true
 
-- name: Hosts File - Absence - Ensure that all enries with the specified FQDN in /etc/hosts are absent
+- name: Hosts File - Absence - Ensure that all entries with the specified FQDN in {{ __sap_maintain_etc_hosts_file }} are absent
   ansible.builtin.lineinfile:
     path: "{{ __sap_maintain_etc_hosts_file }}"
     regexp: '^.*\s{{ __etc_hosts_item.node_name + "." + __etc_hosts_item.node_domain }}\s'

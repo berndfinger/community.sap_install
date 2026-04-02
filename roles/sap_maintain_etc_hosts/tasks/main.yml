@@ -16,7 +16,7 @@
       - "ansible_facts['domain']"
       - "ansible_facts['default_ipv4']"
 
-- name: Hosts File - Get the content of /etc/hosts
+- name: Hosts File - Get the content of {{ __sap_maintain_etc_hosts_file }}
   ansible.builtin.slurp:
     src: "{{ __sap_maintain_etc_hosts_file }}"
   register: __sap_maintain_etc_hosts_register_file
@@ -79,7 +79,7 @@
 
     # The next four tasks ensure that for a host to be present, no host name is defined in sap_maintain_etc_hosts_list
     # for which a different IP address is already present in /etc/hosts
-    - name: Hosts File - Assign /etc/hosts entries to intermediate variable
+    - name: Hosts File - Assign {{ __sap_maintain_etc_hosts_file }} entries to intermediate variable
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_hosts_intermediate:
           "{{
@@ -106,9 +106,9 @@
           {%- endfor -%}
           {{ result }}
 
-    - name: Hosts File - Identify IP address mismatches between sap_maintain_etc_hosts_list and /etc/hosts entries
+    - name: Hosts File - Identify IP address mismatches of hostnames between sap_maintain_etc_hosts_list and {{ __sap_maintain_etc_hosts_file }} entries
       ansible.builtin.set_fact:
-        __sap_maintain_etc_hosts_fact_ip_mismatches: >-
+        __sap_maintain_etc_hosts_fact_ip_mismatches_hostnames: >-
           {%- set mismatches = [] -%}
           {%- for __node in sap_maintain_etc_hosts_list -%}
             {%- if (__node.state is not defined or __node.state == 'present') and __node.node_name is defined -%}
@@ -131,14 +131,72 @@
           {%- endfor -%}
           {{ mismatches }}
 
-    - name: Hosts File - Assert that there are no IP address mismatches
+    - name: Hosts File - Assert that there are no IP address mismatches for hostnames
       ansible.builtin.assert:
-        that:
-          - __sap_maintain_etc_hosts_fact_ip_mismatches | length == 0
-        fail_msg: "FAIL: IP address mismatches found: {{ __sap_maintain_etc_hosts_fact_ip_mismatches }}"
-        success_msg: "PASS: All IP addresses match correctly"
+        that: __sap_maintain_etc_hosts_fact_ip_mismatches_hostnames | length == 0
+        fail_msg: "FAIL: IP address mismatches found: {{ __sap_maintain_etc_hosts_fact_ip_mismatches_hostnames }}"
+        success_msg: "PASS: All IP addresses match correctly for hostnames"
 
-    - name: Hosts File - Ensure either 'node_ip' or 'node_name' is defined for hosts with state='absent'
+    - name: Hosts File - Identify IP address mismatches of FQDNs between sap_maintain_etc_hosts_list and {{ __sap_maintain_etc_hosts_file }} entries
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_ip_mismatches_fqdn: >-
+          {%- set mismatches_fqdn = [] -%}
+          {%- for __node in sap_maintain_etc_hosts_list -%}
+            {%- if (__node.state is not defined or __node.state == 'present') and __node.node_name is defined -%}
+              {%- set matching_fqdn = [] -%}
+              {%- for __host in __sap_maintain_etc_hosts_fact_hosts_ip_list -%}
+                {%- if (__host.state is not defined or __host.state == 'present') and __host.hostname == (__node.node_name ~ '.' ~  __node.node_domain) -%}
+                  {%- set _ = matching_fqdn.append(__host) -%}
+                {%- endif -%}
+              {%- endfor -%}
+              {%- for __host in matching_fqdn -%}
+                {%- if __host.ip != __node.node_ip -%}
+                  {%- set _ = mismatches_fqdn.append({
+                    'hostname': __node.node_name + "." + __node.node_domain,
+                    'defined_ip': __node.node_ip,
+                    'actual_ip': __host.ip
+                  }) -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ mismatches_fqdn }}
+
+    - name: Hosts File - Assert that there are no IP address mismatches for FQDNs
+      ansible.builtin.assert:
+        that: __sap_maintain_etc_hosts_fact_ip_mismatches_fqdn | length == 0
+        fail_msg: "FAIL: IP address mismatches found: {{ __sap_maintain_etc_hosts_fact_ip_mismatches_fqdn }}"
+        success_msg: "PASS: All IP addresses match correctly for FQDNs"
+
+    - name: Hosts File - Identify duplicate hostnames or aliases among sap_maintain_etc_hosts_list and {{ __sap_maintain_etc_hosts_file }}
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_duplicate_hostnames: >-
+          {%- set duplicates = [] -%}
+          {%- for __host in sap_maintain_etc_hosts_list -%}
+            {%- set __configured_hostnames = [__host.node_name] -%}
+            {%- if __host.aliases is defined -%}
+              {%- set _ = __configured_hostnames.extend(__host.aliases) -%}
+            {%- endif -%}
+            {%- for __hostname in __configured_hostnames -%}
+              {%- set existing = __sap_maintain_etc_hosts_fact_hosts_ip_list | selectattr('hostname', 'eq', __hostname) | list -%}
+              {%- if existing | length > 0 -%}
+                {%- for entry in existing -%}
+                  {%- if entry.ip != __host.node_ip and __hostname not in duplicates -%}
+                    {%- set _ = duplicates.append(__hostname) -%}
+                  {%- endif -%}
+                {%- endfor -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+          {{ duplicates }}
+
+    - name: Hosts File - Assert that hostnames and aliases are unique
+      ansible.builtin.assert:
+        that: "__sap_maintain_etc_hosts_fact_duplicate_hostnames | length == 0"
+        fail_msg: "FAIL: Duplicate hostnames or aliases found in sap_maintain_etc_hosts_list or {{ __sap_maintain_etc_hosts_file }}: {{ __sap_maintain_etc_hosts_fact_duplicate_hostnames | join(', ') }}"
+        success_msg: "PASS: All hostnames, including aliases, of sap_maintain_etc_hosts_list are unique, also among {{ __sap_maintain_etc_hosts_file }}"
+
+    - name: Hosts File - Assert that either 'node_ip' or 'node_name' is defined for hosts with state='absent'
       ansible.builtin.assert:
         that: __absent_item.node_ip is defined or __absent_item.node_name is defined
         fail_msg: "FAIL: member with state 'absent' is defined without 'node_ip' or 'node_name': {{ __absent_item }}."
