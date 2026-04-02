@@ -146,7 +146,7 @@
       loop_control:
         loop_var: __absent_item
 
-    - name: Hosts File - Get list of hosts to be added with no state definition
+    - name: Hosts File - Get list of hosts to be present with no state definition
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_present: "{{ sap_maintain_etc_hosts_list | selectattr('state', 'undefined') | list }}"
 

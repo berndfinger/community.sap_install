@@ -55,8 +55,10 @@
         - sap_domain
         - sap_maintain_etc_hosts_list, member node_domain
 
-- name: Hosts File - Presence - Set the alias mode and the content of the comment
+- name: Hosts File - Presence - Initialize some vars
   ansible.builtin.set_fact:
+    __sap_maintain_etc_hosts_fact_aliases: ''
+    __sap_maintain_etc_hosts_fact_existing_aliases: []
     __sap_maintain_etc_hosts_fact_alias_mode: "{{ __etc_hosts_item.alias_mode | default('merge') }}"
     __sap_maintain_etc_hosts_fact_comment: >-
       {{
@@ -66,9 +68,26 @@
         | trim
       }}
 
-- name: Hosts File - Presence - Merge existing aliases with new alias list
+- name: Hosts File - Presence - Merge existing aliases with new alias list if IP address and hostname are unchanged
   when: __sap_maintain_etc_hosts_fact_alias_mode != "overwrite"
   block:
+    - name: Hosts File - Presence - Check if IP and hostname exist in /etc/hosts
+      ansible.builtin.set_fact:
+        __sap_maintain_etc_hosts_fact_ip_hostname_exists:
+          "{{ (__sap_maintain_etc_hosts_register_file['content'] | b64decode).split('\n')
+            | select('match', '^' ~ __etc_hosts_item.node_ip ~ '\\s')
+            | map('regex_replace', '#.*$', '')
+            | map('split') | flatten
+            | select('equalto', __etc_hosts_item.node_name)
+            | list | length > 0 }}"
+
+    - name: Hosts File - Presence - Notify about aliases to be overwritten
+      ansible.builtin.debug:
+        msg: |
+          "INFO: Because the hostname differs from the existing hostname for the IP address in /etc/hosts,
+           the existing aliases will not be preserved"
+      when: not __sap_maintain_etc_hosts_fact_ip_hostname_exists
+
     - name: Hosts File - Presence - Extract existing aliases from /etc/hosts for {{ __etc_hosts_item.node_ip }}
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_existing_aliases:
@@ -78,19 +97,21 @@
             | map('split') | flatten
             | reject('equalto', __etc_hosts_item.node_ip)
             | reject('equalto', __etc_hosts_item.node_name)
-            | reject('equalto', __etc_hosts_item.node_name ~ '.' ~ __sap_maintain_etc_hosts_fact_domain) }}"
+            | reject('equalto', __etc_hosts_item.node_name ~ '.' ~ __sap_maintain_etc_hosts_fact_domain)
+            | list }}"
+      when: __sap_maintain_etc_hosts_fact_ip_hostname_exists
 
     - name: Hosts File - Presence - Add defined aliases
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_aliases:
-          "{{ (__sap_maintain_etc_hosts_fact_existing_aliases + __etc_hosts_item.aliases
-              if ('aliases' in __etc_hosts_item and __etc_hosts_item.aliases is not none) else [])
-              | unique | join(sap_maintain_etc_hosts_delimiter) | trim }}"
+          "{{ (__sap_maintain_etc_hosts_fact_existing_aliases + (__etc_hosts_item.aliases | default([], true)))
+           | unique | join(sap_maintain_etc_hosts_delimiter) | trim }}"
+      when: __sap_maintain_etc_hosts_fact_ip_hostname_exists
 
 - name: Hosts File - Presence - Overwrite existing aliases
-  when: __sap_maintain_etc_hosts_fact_alias_mode == "overwrite"
   ansible.builtin.set_fact:
-    __sap_maintain_etc_hosts_fact_aliases: "{{ __etc_hosts_item.aliases | d([]) | unique | join(sap_maintain_etc_hosts_delimiter) }}"
+    __sap_maintain_etc_hosts_fact_aliases: "{{ __etc_hosts_item.aliases | d([], true) | unique | join(sap_maintain_etc_hosts_delimiter) }}"
+  when: __sap_maintain_etc_hosts_fact_alias_mode == "overwrite" or not __sap_maintain_etc_hosts_fact_ip_hostname_exists
 
 - name: Hosts File - Presence - Display host, DNS domainname and IP address before the modification
   ansible.builtin.debug:
