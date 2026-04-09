@@ -47,7 +47,7 @@
         loop_var: __hosts_item
       when: __hosts_item.node_name is defined
 
-    - name: Hosts File - Ensure 'node_name' elements are unique
+    - name: Hosts File - Ensure 'node_name' values are unique
       ansible.builtin.assert:
         that: __defined_node_names | length == __defined_node_names | unique | length
         fail_msg: |
@@ -62,7 +62,7 @@
                                 | map(attribute='node_name', default='')
                                 | select | list }}"
 
-    - name: Hosts File - Ensure 'aliases' elements are unique
+    - name: Hosts File - Ensure 'aliases' values are unique
       ansible.builtin.assert:
         that: __defined_aliases | length == __defined_aliases | unique | length
         fail_msg: |
@@ -76,6 +76,23 @@
         __defined_aliases: "{{ sap_maintain_etc_hosts_list
                              | map(attribute='aliases', default='')
                              | select | flatten }}"
+
+    - name: Hosts File - Ensure 'node_name' values do not appear in 'aliases'
+      ansible.builtin.assert:
+        that: __node_names_in_aliases | length == 0
+        fail_msg: |
+          FAIL: The following 'node_name' values also appear in 'aliases':
+          {% for __name in __node_names_in_aliases %}
+          - {{ __name }}
+          {% endfor %}
+      vars:
+        __defined_node_names: "{{ sap_maintain_etc_hosts_list
+                                | map(attribute='node_name', default='')
+                                | select | list }}"
+        __defined_aliases: "{{ sap_maintain_etc_hosts_list
+                             | map(attribute='aliases', default='')
+                             | select | flatten }}"
+        __node_names_in_aliases: "{{ __defined_node_names | intersect(__defined_aliases) | list }}"
 
     # The next four tasks ensure that for a host to be present, no host name is defined in sap_maintain_etc_hosts_list
     # for which a different IP address is already present in /etc/hosts
@@ -195,7 +212,17 @@
           - "{{ __sap_maintain_etc_hosts_fact_present }}"
         verbosity: 2
 
-    - name: Hosts File - Identify duplicate hostnames or aliases among sap_maintain_etc_hosts_list and {{ __sap_maintain_etc_hosts_file }}
+    - name: Hosts File - Ensure 'node_ip' and 'node_name' are defined for hosts to be added
+      ansible.builtin.assert:
+        that:
+          - __present_item.node_ip is defined
+          - __present_item.node_name is defined
+        fail_msg: "FAIL: member with state != 'absent' is defined without 'node_ip' or 'node_name': {{ __present_item }}."
+      loop: "{{ __sap_maintain_etc_hosts_fact_present }}"
+      loop_control:
+        loop_var: __present_item
+
+    - name: Hosts File - Identify hostnames or aliases with different IP addresses among sap_maintain_etc_hosts_list and {{ __sap_maintain_etc_hosts_file }}
       ansible.builtin.set_fact:
         __sap_maintain_etc_hosts_fact_duplicate_hostnames: >-
           {%- set duplicates = [] -%}
@@ -217,21 +244,11 @@
           {%- endfor -%}
           {{ duplicates }}
 
-    - name: Hosts File - Assert that hostnames and aliases are unique
+    - name: Hosts File - Assert that no IP address conflicts for hostnames and aliases
       ansible.builtin.assert:
         that: "__sap_maintain_etc_hosts_fact_duplicate_hostnames | length == 0"
-        fail_msg: "FAIL: Duplicate hostnames or aliases found in sap_maintain_etc_hosts_list or {{ __sap_maintain_etc_hosts_file }}: {{ __sap_maintain_etc_hosts_fact_duplicate_hostnames | join(', ') }}"
-        success_msg: "PASS: All hostnames, including aliases, of sap_maintain_etc_hosts_list are unique, also among {{ __sap_maintain_etc_hosts_file }}"
-
-    - name: Hosts File - Ensure 'node_ip' and 'node_name' are defined for hosts to be added
-      ansible.builtin.assert:
-        that:
-          - __present_item.node_ip is defined
-          - __present_item.node_name is defined
-        fail_msg: "FAIL: member with state != 'absent' is defined without 'node_ip' or 'node_name': {{ __present_item }}."
-      loop: "{{ __sap_maintain_etc_hosts_fact_present }}"
-      loop_control:
-        loop_var: __present_item
+        fail_msg: "FAIL: IP address conflicts found for: {{ __sap_maintain_etc_hosts_fact_duplicate_hostnames | join(', ') }}"
+        success_msg: "PASS: No IP address conflicts found."
 
     - name: Hosts File - Extract IP addresses and comments from hosts file
       ansible.builtin.set_fact:
