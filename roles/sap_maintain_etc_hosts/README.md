@@ -146,11 +146,11 @@ The following dictionary keys can be defined:
     - _Default:_ `merge`
 
 - **node_comment**<br>
-    Node comment is appended at end of line of managed node.<br>
+    Comment for the /etc/hosts line of the node, excluding the '#' character.<br>
     _Optional_ for adding new entries to `/etc/hosts`.
 
     - _Type:_ `string`
-    - _Default:_ (The content of the variable sap_maintain_etc_hosts_default_comment)
+    - _Default:_ The content of the variable `sap_maintain_etc_hosts_default_comment`
 
 - **hana_site**<br>
     Used by [sap_ha_pacemaker_cluster](https://github.com/sap-linuxlab/community.sap_install/tree/main/roles/sap_ha_pacemaker_cluster) and it is appended to `node_comment`<br>

@@ -49,7 +49,7 @@ argument_specs:
               - Not used when state is absent
           node_comment:
             type: str
-            default: "managed by ansible sap_maintain_etc_hosts role"
+            default: "{{ sap_maintain_etc_hosts_default_comment }}"
             description:
               - String which is appended to the hosts line after '# '
               - Not used when state is absent
