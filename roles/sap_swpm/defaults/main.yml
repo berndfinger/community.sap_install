@@ -508,3 +508,7 @@ sap_swpm_display_unattended_output: false
 
 # Set which Ansible Collection to use when calling sap_install roles.
 sap_swpm_sap_install_collection: 'community.sap_install'
+
+# Optional override that avoids failures if existing SAP instance is detected.
+# This variable should be used with caution as running SWPM installation with active SAP instances can lead to corruption of existing SAP installation.
+sap_swpm_force: false

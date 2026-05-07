@@ -40,17 +40,22 @@
   tags: always
 
 - name: SAP SWPM - Run pre_install tasks
-  ansible.builtin.import_tasks: pre_install.yml
+  ansible.builtin.include_tasks:
+    file: pre_install.yml
   tags:
     - sap_swpm_pre_install
     - sap_swpm_install
 
 - name: SAP SWPM - Run swpm
-  ansible.builtin.import_tasks: swpm.yml
-  when: sap_swpm_run_sapinst
+  ansible.builtin.include_tasks:
+    file: swpm.yml
+  when:
+    - sap_swpm_run_sapinst
+    - not __sap_swpm_sap_detected | d(false) or sap_swpm_force | d(false)
   tags:
     - sap_swpm_install
 
-- name: SAP SWPM - Run postinstall task
-  ansible.builtin.import_tasks: post_install.yml
+- name: SAP SWPM - Run post_install task
+  ansible.builtin.include_tasks:
+    file: post_install.yml
   when: sap_swpm_run_sapinst

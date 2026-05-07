@@ -42,3 +42,105 @@ __sap_swpm_firewall_extra_packages: []
 # Predefined firewall service names.
 __sap_swpm_firewall_service_name_cs: "sap-nw-central"
 __sap_swpm_firewall_service_name_app: "sap-nw-app"
+
+
+### Internal variables for SAP detection.
+# Boolean state of detection of SAP Instances.
+__sap_swpm_sap_detected: false
+
+# List of SAP instance numbers generated in pre_install/detect_sap.yml.
+__sap_swpm_detect_instance_numbers: []
+
+# List of expected SAP instance names generated in pre_install/detect_sap.yml.
+__sap_swpm_detect_instance_names: []
+
+# Dictionary Matrix of product prefixes and sections combinations that must be enforced.
+# This will ensure that required sections are present for specific products,
+# while allowing other products to pass through and potentially fail during SWPM.
+# NOTE: Dictionary contains variables that will be expanded only when accessed, which is after validation of inifile!
+__sap_swpm_product_sections_dict:
+  # Product Catalog ID prefix.
+  # Example: 'NW_ABAP_ASCS' for product catalog ID 'NW_ABAP_ASCS:S4HANA2025.CORE.HDB.ABAP'.
+  # Contains: ASCS
+  NW_ABAP_ASCS:
+    # Name of section in 'sap_swpm_inifile_sections_list' that must be present for this product.
+    sections:
+      - nw_config_central_services_abap
+    # Instance name prefix used for detection of SAP instances.
+    instance_names:
+      - "{{ 'ASCS' ~ sap_swpm_ascs_instance_nr if sap_swpm_ascs_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_ascs_instance_nr | d('') }}"
+
+  # Contains: PAS
+  NW_ABAP_CI:
+    sections:
+      - nw_config_primary_application_server_instance
+    instance_names:
+      - "{{ 'DVEBMGS' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
+      - "{{ 'D' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_pas_instance_nr | d('') }}"
+
+  # Contains: ASCS, PAS (ABAP)
+  NW_ABAP_OneHost:
+    sections:
+      - nw_config_central_services_abap
+      - nw_config_primary_application_server_instance
+    instance_names:
+      - "{{ 'ASCS' ~ sap_swpm_ascs_instance_nr if sap_swpm_ascs_instance_nr | d('') | length > 0 else '' }}"
+      - "{{ 'D' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
+      - "{{ 'DVEBMGS' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_ascs_instance_nr | d('') }}"
+      - "{{ sap_swpm_pas_instance_nr | d('') }}"
+
+  # Contains: AAS (ABAP or JAVA)
+  NW_DI:
+    sections:
+      - nw_config_additional_application_server_instance
+    instance_names:
+      - "{{ 'D' ~ sap_swpm_aas_instance_nr if sap_swpm_aas_instance_nr | d('') | length > 0 else '' }}"
+      - "{{ 'J' ~ sap_swpm_aas_instance_nr if sap_swpm_aas_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_aas_instance_nr | d('') }}"
+
+  # Contains: ERS
+  NW_ERS:
+    sections:
+      - nw_config_ers
+    instance_names:
+      - "{{ 'ERS' ~ sap_swpm_ers_instance_nr if sap_swpm_ers_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_ers_instance_nr | d('') }}"
+
+  # Contains: ASCS, PAS (JAVA)
+  NW_Java_CI:
+    sections:
+      - nw_config_primary_application_server_instance
+    instance_names:
+      - "{{ 'J' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_pas_instance_nr | d('') }}"
+
+  NW_Java_SCS:
+    sections:
+      - nw_config_central_services_java
+    instance_names:
+      - "{{ 'SCS' ~ sap_swpm_java_scs_instance_nr if sap_swpm_java_scs_instance_nr | d('') | length > 0 else '' }}"
+    instance_numbers:
+      - "{{ sap_swpm_java_scs_instance_nr | d('') }}"
+
+
+# This is special list of product prefixes, where we cannot detect SAP,
+# because it does not create any recognizable files.
+# NOTE: Do not add product prefixes already in '__sap_swpm_product_sections_dict'!
+__sap_swpm_product_detection_skipped:
+  # Product prefixes that are known for Database Load.
+  # Installs only 'saphostctrl' and rest is done in database.
+  # This is not conclusive enough for us to decide and SWPM handles this itself.
+  database_load:
+    - NW_ABAP_DB
+    - NW_Java_DB
+  # Space for more categories, if more products are found. Candidates:
+  # NW_ABAP_DB_DBRefresh, NW_Java_DB_DBRefresh, NW_Webdispatcher.
