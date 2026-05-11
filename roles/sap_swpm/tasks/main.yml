@@ -40,14 +40,14 @@
   tags: always
 
 - name: SAP SWPM - Run pre_install tasks
-  ansible.builtin.include_tasks:
+  ansible.builtin.import_tasks:
     file: pre_install.yml
   tags:
     - sap_swpm_pre_install
     - sap_swpm_install
 
 - name: SAP SWPM - Run swpm
-  ansible.builtin.include_tasks:
+  ansible.builtin.import_tasks:
     file: swpm.yml
   when:
     - sap_swpm_run_sapinst
@@ -56,6 +56,6 @@
     - sap_swpm_install
 
 - name: SAP SWPM - Run post_install task
-  ansible.builtin.include_tasks:
+  ansible.builtin.import_tasks:
     file: post_install.yml
   when: sap_swpm_run_sapinst

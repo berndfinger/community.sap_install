@@ -289,54 +289,17 @@
   tags: sap_swpm_update_etchosts
 
 
-- name: SAP SWPM Pre Install - Set fact with Product ID prefix
-  ansible.builtin.set_fact:
-    __sap_swpm_fact_product_prefix: "{{ sap_swpm_product_catalog_id.split(':') | first }}"
-  when:
-    - sap_swpm_product_catalog_id | d('') | trim | length > 0
-    - "':' in sap_swpm_product_catalog_id"
-
-# While SWPM allows providing extra inputs and ignores them,
-# we want to ensure that some sections are provided before failure occurs inside of SWPM execution.
-- name: SAP SWPM Pre Install - Assert that inifile sections are provided for product
-  ansible.builtin.assert:
-    that: >-
-      (__sap_swpm_product_sections_dict[__product_prefix]['sections']
-        | intersect(sap_swpm_inifile_sections_list) | length)
-          == __sap_swpm_product_sections_dict[__product_prefix]['sections'] | length
-    fail_msg: |
-      FAIL: Product '{{ sap_swpm_product_catalog_id }}' requires
-      all of the following sections to be defined in 'sap_swpm_inifile_sections_list':
-      {{ __sap_swpm_product_sections_dict[__product_prefix]['sections'] | join(', ') }}.
-  vars:
-    __product_prefix: "{{ sap_swpm_product_catalog_id.split(':') | first }}"
-  when:
-    - sap_swpm_inifile_sections_list | d([]) | length > 0
-    - sap_swpm_product_catalog_id | d('') | trim | length > 0
-    - "':' in sap_swpm_product_catalog_id"
-    - __sap_swpm_product_sections_dict[__product_prefix] is defined
-
-# Detect running SAP instances using variables validated in tasks above.
-# NOTE: This will result in skipping of remaining tasks, unless force is used.
-- name: SAP SWPM Pre Install - Detect running SAP instances
-  ansible.builtin.include_tasks:
-    file: pre_install/detect_sap.yml
-    apply:
-      tags: always
-  tags: always
-
+# Run Pre-installation Steps Based on Run Mode
+# NOTE: This task file includes SAP detection logic, which will be skipped for these tags.
+- name: SAP SWPM Pre Install - Run Pre-installation Steps
+  ansible.builtin.include_tasks: pre_install/swpm_prepare.yml
+  tags:
+    - sap_swpm_generate_inifile
+    - sap_swpm_sapinst_commandline
 
 - name: Block to execute on empty host or in force mode
   when: not __sap_swpm_sap_detected | d(false) or sap_swpm_force | d(false)
   block:
-
-    # Run Pre-installation Steps Based on Run Mode
-    - name: SAP SWPM Pre Install - Run Pre-installation Steps
-      ansible.builtin.include_tasks: pre_install/swpm_prepare.yml
-      tags:
-        - sap_swpm_generate_inifile
-        - sap_swpm_sapinst_commandline
-
 
     ## Pre Install Optional Tasks
     # Firewall
@@ -350,7 +313,6 @@
       tags: sap_swpm_configure_firewall
 
     # /etc/hosts
-
     - name: SAP SWPM Pre Install - Update /etc/hosts
       ansible.builtin.include_tasks:
         file: pre_install/update_etchosts.yml

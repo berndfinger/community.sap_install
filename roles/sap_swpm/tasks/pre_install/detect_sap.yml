@@ -15,7 +15,26 @@
 # 6. Inform user about detected instances and potential risks of proceeding with installation.
 
 
-## 0. Prepare lists of instance names and numbers for detection.
+# Extract prefix from Product ID, or inform that prefix is not recognized.
+- name: SAP SWPM Pre Install - Set fact with SAP Product ID prefix
+  ansible.builtin.set_fact:
+    __sap_swpm_fact_product_prefix: >-
+      {{ sap_swpm_product_catalog_id.split(':') | first
+        if sap_swpm_product_catalog_id | d('') | trim | length > 0 and ':' in sap_swpm_product_catalog_id
+        else '' }}
+
+- name: SAP SWPM Pre Install - Detect - Inform if SAP Product ID prefix is unavailable
+  ansible.builtin.debug:
+    msg: |
+      WARN: Unable to extract SAP Product ID prefix for product catalog ID '{{ sap_swpm_product_catalog_id }}'.
+      Expected format of product catalog ID is 'PREFIX:REST_OF_ID' (e.g., 'NW_ABAP_ASCS:S4HANA2025.CORE.HDB.ABAP').
+      Detection of existing SAP instances will proceed based on contents of 'sap_swpm_inifile_sections_list' variable.
+
+      NOTE: Providing invalid SAP Product ID will most likely lead into failure during SWPM execution.
+  when: __sap_swpm_fact_product_prefix | length == 0
+
+
+# Prepare lists of instance names and numbers for detection.
 # Lists based on Product ID.
 # Regex is used to remove items with empty values.
 - name: SAP SWPM Pre Install - Detect - Set fact with lists for detection using product ID
@@ -27,7 +46,7 @@
       "{{ __sap_swpm_product_sections_dict[__sap_swpm_fact_product_prefix]['instance_names']
         | select('regex', '.+') | unique | list }}"
   when:
-    - __sap_swpm_fact_product_prefix | d('') | trim | length > 0
+    - __sap_swpm_fact_product_prefix | trim | length > 0
     - __sap_swpm_product_sections_dict[__sap_swpm_fact_product_prefix] is defined
 
 
@@ -37,10 +56,10 @@
 # Falling back to Ansible unique filter as Jinja2 one failed: 'sap_swpm_ascs_instance_nr' is undefined
 - name: Block to fall back on sections if product ID is not in dictionary
   when:
-    - __sap_swpm_fact_product_prefix | d('') | trim | length == 0
-      or __sap_swpm_fact_product_prefix not in __sap_swpm_product_sections_dict
-    - __sap_swpm_fact_product_prefix
-      not in __sap_swpm_product_detection_skipped | dict2items | map(attribute='value') | flatten | unique
+    - __sap_swpm_fact_product_prefix | trim | length == 0
+      or __sap_swpm_fact_product_prefix not in (
+        __sap_swpm_product_sections_dict.keys() | list
+        + __sap_swpm_product_detection_skipped | dict2items | map(attribute='value') | flatten)
   block:
 
     - name: SAP SWPM Pre Install - Detect - Set fact with lists for ASCS detection
