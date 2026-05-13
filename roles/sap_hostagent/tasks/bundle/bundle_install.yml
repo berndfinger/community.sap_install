@@ -28,7 +28,7 @@
   when: not __sap_hostagent_register_saphostexec_stat.stat.exists
 
 
-# Output contains typo as well: [OK] SAPHostExec / SAPHostControl succesfully installed
+# Output contains typo so we need to use regex: [OK] SAPHostExec / SAPHostControl successfully installed
 # RC=0 is valid, but it outputs into 'stderr' instead of 'stdout', so we need to check both.
 - name: SAP Host Agent - Bundle - Install SAP Host Agent using saphostexec
   ansible.builtin.command:

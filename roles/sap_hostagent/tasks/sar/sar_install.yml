@@ -48,7 +48,7 @@
   changed_when: "'file(s) extracted' in __sap_hostagent_register_extract_sar.stdout"
 
 
-# Output contains typo as well: [OK] SAPHostExec / SAPHostControl succesfully installed
+# Output contains typo so we need to use regex: [OK] SAPHostExec / SAPHostControl successfully installed
 # RC=0 is valid, but it outputs into 'stderr' instead of 'stdout', so we need to check both.
 - name: SAP Host Agent - SAR - Install SAP Host Agent using saphostexec
   ansible.builtin.command:
