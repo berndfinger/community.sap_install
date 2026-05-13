@@ -40,7 +40,7 @@
   become_user: root
   register: __sap_hostagent_register_install_bundle
   changed_when: >-
-    'succesfully installed' in __sap_hostagent_register_install_bundle.stdout
+    __sap_hostagent_register_install_bundle.stdout is search('SAPHostExec.*installed')
     or 'Start saphostagent.service' in __sap_hostagent_register_install_bundle.stdout
-    or 'succesfully installed' in __sap_hostagent_register_install_bundle.stderr
+    or __sap_hostagent_register_install_bundle.stderr is search('SAPHostExec.*installed')
     or 'Start saphostagent.service' in __sap_hostagent_register_install_bundle.stderr

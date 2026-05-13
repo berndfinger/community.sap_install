@@ -60,9 +60,9 @@
   become_user: root
   register: __sap_hostagent_register_install_sar
   changed_when: >-
-    'succesfully installed' in __sap_hostagent_register_install_sar.stdout
+    __sap_hostagent_register_install_sar.stdout is search('SAPHostExec.*installed')
     or 'Start saphostagent.service' in __sap_hostagent_register_install_sar.stdout
-    or 'succesfully installed' in __sap_hostagent_register_install_sar.stderr
+    or __sap_hostagent_register_install_sar.stderr is search('SAPHostExec.*installed')
     or 'Start saphostagent.service' in __sap_hostagent_register_install_sar.stderr
   failed_when: >-
     '[ERROR]' in __sap_hostagent_register_install_sar.stdout
