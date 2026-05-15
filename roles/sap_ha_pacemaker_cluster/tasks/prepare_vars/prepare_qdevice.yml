@@ -51,13 +51,14 @@
 
 - name: "SAP HA Prepare Pacemaker - (QDevice) Update watchdog-timeout in SBD options"
   ansible.builtin.set_fact:
-    __sap_ha_pacemaker_cluster_ha_cluster_sbd_options: >-
-      {{ __sap_ha_pacemaker_cluster_ha_cluster_sbd_options | d([]) + __insert_watchdog_timeout }}
+    __sap_ha_pacemaker_cluster_sbd_options: >-
+      {{ __sap_ha_pacemaker_cluster_sbd_options | d([]) + __insert_watchdog_timeout }}
   vars:
     __insert_watchdog_timeout:
       - name: 'watchdog-timeout'
         value: '35'
   when:
-    - "__sap_ha_pacemaker_cluster_ha_cluster_sbd_options
-      | selectattr('name', 'equalto', 'watchdog-timeout') | list | length == 0"
+    - __sap_ha_pacemaker_cluster_sbd_options is not defined
+      or __sap_ha_pacemaker_cluster_sbd_options
+        | selectattr('name', 'equalto', 'watchdog-timeout') | list | length == 0
     - ansible_facts['os_family'] == 'RedHat'

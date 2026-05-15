@@ -177,8 +177,7 @@
       ansible.builtin.fail:
         msg: |
           FAIL: Watchdog modules must be defined for SBD configuration!
-          Please define watchdog modules in the variable 'sap_ha_pacemaker_cluster_sbd_watchdog_modules'
-          with appropriate values for your environment.
+          Please define at least one watchdog module in the list variable 'sap_ha_pacemaker_cluster_sbd_watchdog_modules'.
       when:
         - sap_ha_pacemaker_cluster_sbd_watchdog_modules | d([]) | length == 0
         - not __ha_cluster_sbd_watchdog_modules_exists
