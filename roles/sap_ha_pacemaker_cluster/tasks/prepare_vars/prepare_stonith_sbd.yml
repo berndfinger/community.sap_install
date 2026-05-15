@@ -79,6 +79,7 @@
     # Diskless SBD requires:
     # - properties 'stonith-watchdog-timeout' or 'fencing-watchdog-timeout'
     # - or QNetd host configured in 'sap_ha_pacemaker_cluster_qdevice_host'
+    # TODO: Add explanation and conditionals for 'fencing-watchdog-timeout' which is part of pacemaker 3.0.1 and later.
     - name: "SAP HA Prepare Pacemaker - (STONITH SBD) Fail if Diskless SBD configuration is insufficient"
       ansible.builtin.fail:
         msg: |
@@ -86,12 +87,12 @@
           which indicates Diskless SBD configuration.
 
           Diskless SBD requires either of the following:
-          - Watchdog timeout property ('stonith-watchdog-timeout' or 'fencing-watchdog-timeout')
+          - Watchdog timeout property 'stonith-watchdog-timeout'
             configured in the variable 'sap_ha_pacemaker_cluster_cluster_properties'.
           - QNet host configured in the variable 'sap_ha_pacemaker_cluster_qdevice_host'.
       when:
         - not sap_ha_pacemaker_cluster_cluster_properties['stonith-watchdog-timeout'] is defined
-        - not sap_ha_pacemaker_cluster_cluster_properties['fencing-watchdog-timeout'] is defined
+        # - not sap_ha_pacemaker_cluster_cluster_properties['fencing-watchdog-timeout'] is defined
         - not sap_ha_pacemaker_cluster_qdevice_host | d('') | length > 0
 
     # Diskless SBD cannot be configured on 2-node cluster without QDevice,
@@ -162,22 +163,7 @@
 # Create dictionary with SBD specific parameters for ha_cluster
 # Omit parameters if they are already present in provided dictionary sap_ha_pacemaker_cluster_ha_cluster
 # sbd_devices omits only if already defined, which allows for empty list for Diskless SBD configuration.
-- name: "SAP HA Prepare Pacemaker - (STONITH SBD) Create ha_cluster parameters for SBD"
-  ansible.builtin.set_fact:
-    __sap_ha_pacemaker_cluster_ha_cluster_stonith: >-
-      {{
-        dict(
-          sbd_devices=(sap_ha_pacemaker_cluster_sbd_devices | d([])
-            if not __ha_cluster_sbd_devices_exists
-            else omit),
-          sbd_watchdog=(sap_ha_pacemaker_cluster_sbd_watchdog
-            if sap_ha_pacemaker_cluster_sbd_watchdog | d([]) | length > 0 and not __ha_cluster_sbd_watchdog_exists
-            else omit),
-          sbd_watchdog_modules=(sap_ha_pacemaker_cluster_sbd_watchdog_modules
-            if sap_ha_pacemaker_cluster_sbd_watchdog_modules | d([]) | length > 0 and not __ha_cluster_sbd_watchdog_modules_exists
-            else omit)
-        )
-      }}
+- name: Block to set SBD parameters
   vars:
     # Detect if parameters were already provided in sap_ha_pacemaker_cluster_ha_cluster
     __ha_cluster_sbd_devices_exists:
@@ -186,6 +172,33 @@
       "{{ true if __sap_ha_pacemaker_cluster_ha_cluster.sbd_watchdog | d([]) | length > 0 else false }}"
     __ha_cluster_sbd_watchdog_modules_exists:
       "{{ true if __sap_ha_pacemaker_cluster_ha_cluster.sbd_watchdog_modules | d([]) | length > 0 else false }}"
+  block:
+    - name: "SAP HA Prepare Pacemaker - (STONITH SBD) Fail if watchdog modules are not defined"
+      ansible.builtin.fail:
+        msg: |
+          FAIL: Watchdog modules must be defined for SBD configuration!
+          Please define watchdog modules in the variable 'sap_ha_pacemaker_cluster_sbd_watchdog_modules'
+          with appropriate values for your environment.
+      when:
+        - sap_ha_pacemaker_cluster_sbd_watchdog_modules | d([]) | length == 0
+        - not __ha_cluster_sbd_watchdog_modules_exists
+
+    - name: "SAP HA Prepare Pacemaker - (STONITH SBD) Create ha_cluster parameters for SBD"
+      ansible.builtin.set_fact:
+        __sap_ha_pacemaker_cluster_ha_cluster_stonith: >-
+          {{
+            dict(
+              sbd_devices=(sap_ha_pacemaker_cluster_sbd_devices | d([])
+                if not __ha_cluster_sbd_devices_exists
+                else omit),
+              sbd_watchdog=(sap_ha_pacemaker_cluster_sbd_watchdog
+                if sap_ha_pacemaker_cluster_sbd_watchdog | d([]) | length > 0 and not __ha_cluster_sbd_watchdog_exists
+                else omit),
+              sbd_watchdog_modules=(sap_ha_pacemaker_cluster_sbd_watchdog_modules
+                if sap_ha_pacemaker_cluster_sbd_watchdog_modules | d([]) | length > 0 and not __ha_cluster_sbd_watchdog_modules_exists
+                else omit)
+            )
+          }}
 
 
 - name: "SAP HA Prepare Pacemaker - (STONITH SBD) Include sbd fence agent"
