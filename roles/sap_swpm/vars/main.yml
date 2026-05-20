@@ -48,16 +48,17 @@ __sap_swpm_firewall_service_name_app: "sap-nw-app"
 # Boolean state of detection of SAP Instances.
 __sap_swpm_sap_detected: false
 
-# List of SAP instance numbers generated in pre_install/detect_sap.yml.
-__sap_swpm_detect_instance_numbers: []
-
-# List of expected SAP instance names generated in pre_install/detect_sap.yml.
-__sap_swpm_detect_instance_names: []
+# List of combinations of SAP instance numbers and names generated in pre_install/detect_sap_prepare.yml.
+__sap_swpm_detect_instances: []
 
 # Dictionary Matrix of product prefixes and sections combinations that must be enforced.
 # This will ensure that required sections are present for specific products,
 # while allowing other products to pass through and potentially fail during SWPM.
 # NOTE: Dictionary contains variables that will be expanded only when accessed, which is after validation of inifile!
+# - sections - list of sections that must be present in inifile for this product.
+# - instances - list of dictionaries with 'number' and 'names' keys to define expected instance number and name format for the instance.
+#   - number - unique instance number for the instance.
+#   - names - list of possible instance names for the instance. Any of them means that the instance is detected.
 __sap_swpm_product_sections_dict:
   # Product Catalog ID prefix.
   # Example: 'NW_ABAP_ASCS' for product catalog ID 'NW_ABAP_ASCS:S4HANA2025.CORE.HDB.ABAP'.
@@ -66,70 +67,72 @@ __sap_swpm_product_sections_dict:
     # Name of section in 'sap_swpm_inifile_sections_list' that must be present for this product.
     sections:
       - nw_config_central_services_abap
-    # Instance name prefix used for detection of SAP instances.
-    instance_names:
-      - "{{ 'ASCS' ~ sap_swpm_ascs_instance_nr if sap_swpm_ascs_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_ascs_instance_nr | d('') }}"
+    instances:
+      - number: "{{ sap_swpm_ascs_instance_nr }}"
+        names:
+          - "{{ 'ASCS' ~ sap_swpm_ascs_instance_nr }}"
 
-  # Contains: PAS
-  NW_ABAP_CI:
+  # Contains: SCS
+  NW_Java_SCS:
     sections:
-      - nw_config_primary_application_server_instance
-    instance_names:
-      - "{{ 'DVEBMGS' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
-      - "{{ 'D' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_pas_instance_nr | d('') }}"
-
-  # Contains: ASCS, PAS (ABAP)
-  NW_ABAP_OneHost:
-    sections:
-      - nw_config_central_services_abap
-      - nw_config_primary_application_server_instance
-    instance_names:
-      - "{{ 'ASCS' ~ sap_swpm_ascs_instance_nr if sap_swpm_ascs_instance_nr | d('') | length > 0 else '' }}"
-      - "{{ 'D' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
-      - "{{ 'DVEBMGS' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_ascs_instance_nr | d('') }}"
-      - "{{ sap_swpm_pas_instance_nr | d('') }}"
-
-  # Contains: AAS (ABAP or JAVA)
-  NW_DI:
-    sections:
-      - nw_config_additional_application_server_instance
-    instance_names:
-      - "{{ 'D' ~ sap_swpm_aas_instance_nr if sap_swpm_aas_instance_nr | d('') | length > 0 else '' }}"
-      - "{{ 'J' ~ sap_swpm_aas_instance_nr if sap_swpm_aas_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_aas_instance_nr | d('') }}"
+      - nw_config_central_services_java
+    instances:
+      - number: "{{ sap_swpm_java_scs_instance_nr }}"
+        names:
+          - "{{ 'SCS' ~ sap_swpm_java_scs_instance_nr }}"
 
   # Contains: ERS
   NW_ERS:
     sections:
       - nw_config_ers
-    instance_names:
-      - "{{ 'ERS' ~ sap_swpm_ers_instance_nr if sap_swpm_ers_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_ers_instance_nr | d('') }}"
+    instances:
+      - number: "{{ sap_swpm_ers_instance_nr }}"
+        names:
+          - "{{ 'ERS' ~ sap_swpm_ers_instance_nr }}"
+
+  # Contains: ASCS, PAS (ABAP)
+  # DVEBMGS is used as fallback to legacy instance name.
+  NW_ABAP_OneHost:
+    sections:
+      - nw_config_central_services_abap
+      - nw_config_primary_application_server_instance
+    instances:
+      - number: "{{ sap_swpm_ascs_instance_nr }}"
+        names:
+          - "{{ 'ASCS' ~ sap_swpm_ascs_instance_nr }}"
+      - number: "{{ sap_swpm_pas_instance_nr }}"
+        names:
+          - "{{ 'D' ~ sap_swpm_pas_instance_nr }}"
+          - "{{ 'DVEBMGS' ~ sap_swpm_pas_instance_nr }}"
+
+  # Contains: PAS
+  NW_ABAP_CI:
+    sections:
+      - nw_config_primary_application_server_instance
+    instances:
+      - number: "{{ sap_swpm_pas_instance_nr }}"
+        names:
+          - "{{ 'DVEBMGS' ~ sap_swpm_pas_instance_nr }}"
+          - "{{ 'D' ~ sap_swpm_pas_instance_nr }}"
 
   # Contains: ASCS, PAS (JAVA)
   NW_Java_CI:
     sections:
       - nw_config_primary_application_server_instance
-    instance_names:
-      - "{{ 'J' ~ sap_swpm_pas_instance_nr if sap_swpm_pas_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_pas_instance_nr | d('') }}"
+    instances:
+      - number: "{{ sap_swpm_pas_instance_nr }}"
+        names:
+          - "{{ 'J' ~ sap_swpm_pas_instance_nr }}"
 
-  NW_Java_SCS:
+  # Contains: AAS (ABAP or JAVA)
+  NW_DI:
     sections:
-      - nw_config_central_services_java
-    instance_names:
-      - "{{ 'SCS' ~ sap_swpm_java_scs_instance_nr if sap_swpm_java_scs_instance_nr | d('') | length > 0 else '' }}"
-    instance_numbers:
-      - "{{ sap_swpm_java_scs_instance_nr | d('') }}"
+      - nw_config_additional_application_server_instance
+    instances:
+      - number: "{{ sap_swpm_aas_instance_nr }}"
+        names:
+          - "{{ 'D' ~ sap_swpm_aas_instance_nr }}"
+          - "{{ 'J' ~ sap_swpm_aas_instance_nr }}"
 
 
 # This is special list of product prefixes, where we cannot detect SAP,
@@ -144,3 +147,9 @@ __sap_swpm_product_detection_skipped:
     - NW_Java_DB
   # Space for more categories, if more products are found. Candidates:
   # NW_ABAP_DB_DBRefresh, NW_Java_DB_DBRefresh, NW_Webdispatcher.
+
+# System ID (SID) in upper case.
+__sap_swpm_sid: "{{ sap_swpm_sid | upper }}"
+
+# Name of '<sid>adm' user.
+__sap_swpm_sidadm_user: "{{ sap_swpm_sid | lower }}adm"

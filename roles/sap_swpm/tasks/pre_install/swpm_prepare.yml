@@ -27,14 +27,35 @@
 
 # Detect running SAP instances using variables validated in tasks above.
 # NOTE: This will result in skipping of remaining tasks, unless force is used.
-- name: SAP SWPM Pre Install - Detect running SAP instances
-  ansible.builtin.include_tasks:
-    file: pre_install/detect_sap.yml
+- name: Block for SAP Detection
   # Inherited tags are explicitly declared here to ensure this inclusion
   # is skipped (and logs are hidden) when only sub-tags like 'sap_swpm_generate_inifile' are requested.
   tags:
     - sap_swpm_pre_install
     - sap_swpm_install
+  block:
+    - name: SAP SWPM Pre Install - Skip all detection checks
+      ansible.builtin.debug:
+        msg: |
+          WARN: Detection checks are SKIPPED because 'sap_swpm_skip_detection' is set to 'true'.
+
+          This bypasses all safety mechanisms that prevent installation over existing SAP systems.
+          Use this ONLY for testing/development on clean systems.
+
+          Proceeding with installation without any detection checks.
+      when: sap_swpm_skip_detection | d(false)
+
+    - name: SAP SWPM Pre Install - Prepare variables for SAP detection
+      ansible.builtin.include_tasks:
+        file: detect_sap_prepare.yml
+      when: not sap_swpm_skip_detection | d(false)
+
+    - name: SAP SWPM Pre Install - Detect running SAP instances
+      ansible.builtin.include_tasks:
+        file: pre_install/detect_sap.yml
+      when:
+        - not sap_swpm_skip_detection | d(false)
+        - __sap_swpm_detect_instances | d([]) | length > 0
 
 
 - name: Block to execute only if SAP instance is not detected or in force mode.

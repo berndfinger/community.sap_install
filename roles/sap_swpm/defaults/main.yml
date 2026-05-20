@@ -510,5 +510,11 @@ sap_swpm_display_unattended_output: false
 sap_swpm_sap_install_collection: 'community.sap_install'
 
 # Optional override that forces execution of installation tasks if existing SAP instance is detected.
-# This variable should be used with caution as running SWPM installation with active SAP instances can lead to corruption of existing SAP installation.
+# WARNING: This variable should be used with caution
+# as running SWPM installation with active SAP instances can lead to corruption of existing SAP installation.
 sap_swpm_force: false
+
+# Skip all detection checks. Use ONLY for testing/development on clean systems.
+# WARNING: Skipping detection can lead to data loss if installation already exists!
+# This will bypass all safety checks including saphostctrl, sapcontrol, and file existence checks.
+# sap_swpm_skip_detection: false
