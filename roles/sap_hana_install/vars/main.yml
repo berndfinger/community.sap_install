@@ -72,6 +72,10 @@ __sap_hana_install_fact_is_new_addhost_host: false
 # Path to LSS shared directory.
 __sap_hana_install_lss_inst_path: /lss/shared
 
+# Path to HANA shared directory:
+__sap_hana_install_shared_path:
+  "{{ sap_hana_install_shared_path | regex_replace('/+$', '') }}/{{ sap_hana_install_sid }}"
+
 # Flag for SPS08+ systems where LSS is required.
 __sap_hana_install_fact_is_lss_required: false
 
@@ -88,3 +92,9 @@ __sap_hana_install_firewall_extra_packages: []
 
 # Predefined firewall service name.
 __sap_hana_install_firewall_service_name: "sap-hana-{{ sap_hana_install_number }}"
+
+# System ID (SID) in upper case.
+__sap_hana_install_sid: "{{ sap_hana_install_sid | upper }}"
+
+# Name of '<sid>adm' user.
+__sap_hana_install_sidadm_user: "{{ sap_hana_install_sid | lower }}adm"

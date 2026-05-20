@@ -166,7 +166,7 @@
     # Check for existing addhosts profiles and folders before removing them from list.
     - name: SAP HANA - Addhosts - Pre-Tasks - Find existing instance profiles for all hosts
       ansible.builtin.find:
-        paths: "{{ sap_hana_install_shared_path }}/{{ sap_hana_install_sid }}/profile/"
+        paths: "{{ __sap_hana_install_shared_path }}/profile/"
         patterns: "{{ sap_hana_install_sid }}_HDB{{ sap_hana_install_number }}_*"
         file_type: file
       register: __sap_hana_install_register_existing_profiles

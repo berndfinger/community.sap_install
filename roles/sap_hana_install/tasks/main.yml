@@ -46,15 +46,13 @@
   tags: always
 
 # SAP HANA presence has to be validated for both new system and adding new hosts.
+# Condition is removed, because detection is executed always.
 - name: SAP HANA - Main - Validate presence of existing SAP HANA database
   ansible.builtin.include_tasks:
     file: pre_tasks/hana_exists.yml
     apply:
       tags:
         - sap_hana_install_check_hana_exists
-  when:
-    - (sap_hana_install_new_system and not sap_hana_install_force)
-      or not sap_hana_install_new_system
   tags:
     - sap_hana_install_check_hana_exists
 
@@ -148,7 +146,7 @@
         gsub ("^\\s*hosts?: ", ""); gsub (", ", ","); print; a=0}
       }'
   args:
-    chdir: "{{ sap_hana_install_shared_path }}/{{ sap_hana_install_sid }}/hdblcm"
+    chdir: "{{ __sap_hana_install_shared_path }}/hdblcm"
   register: __sap_hana_install_register_completion_result
   changed_when: false
   when:
