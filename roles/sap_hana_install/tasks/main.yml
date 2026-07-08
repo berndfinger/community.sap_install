@@ -57,6 +57,11 @@
     - sap_hana_install_check_hana_exists
 
 
+- name: SAP HANA - Main - Prepare fapolicyd
+  ansible.builtin.include_tasks:
+    file: pre_tasks/prepare_fapolicyd.yml
+
+
 - name: SAP HANA - Main - Identify hosts in play based on addhosts
   ansible.builtin.include_tasks:
     file: pre_tasks/identify_hosts.yml

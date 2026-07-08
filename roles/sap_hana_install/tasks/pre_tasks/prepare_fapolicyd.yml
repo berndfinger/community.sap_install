@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: Apache-2.0
+---
+
+- name: SAP HANA - Pre-Tasks - Get info about file {{ sap_hana_install_fapolicyd_ansible_rule_file }}
+  ansible.builtin.stat:
+    path: "/etc/fapolicyd/rules.d/{{ sap_hana_install_fapolicyd_ansible_rule_file }}.rules"
+  register: __sap_hana_install_register_fapolicyd_ansible_rule_file_stat
+  when:
+    - __sap_hana_install_configure_fapolicyd
+    - sap_hana_install_enable_fapolicyd
+
+
+- name: SAP HANA - Pre-Tasks - Add fapolicyd rule for Ansible tmp directory, rules file exists
+  ansible.builtin.lineinfile:
+    path: "/etc/fapolicyd/rules.d/{{ sap_hana_install_fapolicyd_ansible_rule_file }}.rules"
+    line: 'allow perm=any uid={{ sap_hana_install_sid | lower }}adm : dir=/var/tmp/'
+    owner: root
+    group: fapolicyd
+    mode: '0644'
+    backup: true
+  register: __sap_hana_install_register_fapolicyd_ansible_rule_file
+  when:
+    - __sap_hana_install_configure_fapolicyd
+    - sap_hana_install_enable_fapolicyd
+    - __sap_hana_install_register_fapolicyd_ansible_rule_file_stat.stat.exists
+
+- name: SAP HANA - Pre-Tasks - Add fapolicyd rule for Ansible tmp directory, rules file does not exist
+  ansible.builtin.lineinfile:
+    path: "/etc/fapolicyd/rules.d/{{ sap_hana_install_fapolicyd_ansible_rule_file }}.rules"
+    line: 'allow perm=any uid={{ sap_hana_install_sid | lower }}adm : dir=/var/tmp/'
+    owner: root
+    group: fapolicyd
+    mode: '0644'
+    create: true
+  when:
+    - __sap_hana_install_configure_fapolicyd
+    - sap_hana_install_enable_fapolicyd
+    - not __sap_hana_install_register_fapolicyd_ansible_rule_file_stat.stat.exists
+
+
+- name: SAP HANA - Pre-Tasks - Restart fapolicyd
+  ansible.builtin.service:
+    name: fapolicyd
+    enabled: true
+    state: restarted
+  when:
+    - __sap_hana_install_configure_fapolicyd
+    - sap_hana_install_enable_fapolicyd

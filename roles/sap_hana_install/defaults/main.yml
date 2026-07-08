@@ -51,6 +51,13 @@ sap_hana_install_fapolicyd_integrity: 'sha256'
 # Note: The mandatory file ending '.rules' will be added in the corresponding task of this role.
 sap_hana_install_fapolicyd_rule_file: '71-sap-shellscripts'
 
+# (RedHat specific) name of fapolicyd rule file for allowing Ansible
+# When using fapolicyd, the following variable is used to define the fapolicyd rule file in which the rule for
+# allowing Ansible is stored. The rule file will be created in the directory '/etc/fapolicyd/rules.d'.
+# This allows running the role even if fapolicyd is active. See also https://bugzilla.redhat.com/show_bug.cgi?id=1746464 .
+# Note: The mandatory file ending '.rules' will be added in the corresponding task of this role.
+sap_hana_install_fapolicyd_ansible_rule_file: '05-ansible'
+
 # Directories which are used for the SAP HANA installation (relevant for SELinux relabeling and for fapolicyd protection)
 sap_hana_install_directories:
   - "{{ sap_hana_install_root_path }}"

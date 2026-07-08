@@ -100,6 +100,34 @@
         state: started
       when: sap_hana_install_enable_fapolicyd
 
+    - name: SAP HANA - Post-Tasks - Restore previous version of fapolicyd rule for Ansible tmp directory
+      ansible.builtin.copy:
+        remote_src: true
+        dest: "/etc/fapolicyd/rules.d/{{ sap_hana_install_fapolicyd_ansible_rule_file }}.rules"
+        src: "{{ __sap_hana_install_register_fapolicyd_ansible_rule_file['backup'] }}"
+        owner: root
+        group: fapolicyd
+        mode: '0644'
+      when:
+        - sap_hana_install_enable_fapolicyd
+        - __sap_hana_install_register_fapolicyd_ansible_rule_file_stat.stat.exists
+
+    - name: SAP HANA - Post-Tasks - Remove fapolicyd backup file for Ansible tmp directory
+      ansible.builtin.file:
+        path: "{{ __sap_hana_install_register_fapolicyd_ansible_rule_file['backup'] }}"
+        state: absent
+      when:
+        - sap_hana_install_enable_fapolicyd
+        - __sap_hana_install_register_fapolicyd_ansible_rule_file_stat.stat.exists
+
+    - name: SAP HANA - Post-Tasks - Remove fapolicyd rule for Ansible tmp directory
+      ansible.builtin.file:
+        path: "/etc/fapolicyd/rules.d/{{ sap_hana_install_fapolicyd_ansible_rule_file }}.rules"
+        state: absent
+      when:
+        - sap_hana_install_enable_fapolicyd
+        - not __sap_hana_install_register_fapolicyd_ansible_rule_file_stat.stat.exists
+
     - name: SAP HANA - Post-Tasks - Restart fapolicyd
       ansible.builtin.service:
         name: fapolicyd
