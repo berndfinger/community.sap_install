@@ -160,7 +160,7 @@ sap_ha_install_hana_hsr_cluster_nodes:
 - _Type:_ `string`
 - _Default:_ `HDB_SYSTEMDB`
 
-The hdbuserstore key used for connecting to the SYSTEMDB for administrative tasks like backups.
+The hdbuserstore key used for connecting to the SYSTEMDB for administrative tasks like backups or updating the global.ini.
 
 ### sap_ha_install_hana_hsr_db_system_password
 - _Type:_ `string`

@@ -42,7 +42,7 @@ sap_ha_install_hana_hsr_instance_number: ''
 #     node_hsr_ip: "192.168.10.2"
 sap_ha_install_hana_hsr_cluster_nodes: []
 
-# The hdbuserstore key used for connecting to the SYSTEMDB for administrative tasks like backups (String).
+# The hdbuserstore key used for connecting to the SYSTEMDB for administrative tasks like backups or updating the global.ini (String).
 sap_ha_install_hana_hsr_hdbuserstore_system_backup_user: HDB_SYSTEMDB
 
 # Password for the HANA 'SYSTEM' user (String).
@@ -112,8 +112,8 @@ sap_ha_install_hana_hsr_configure_firewall: false
 # Default firewall zone, usually `public`, is used if this variable is undefined.
 # sap_ha_install_hana_hsr_firewall_zone: ''
 
-# SAP HANA System Replication listen interface (String).
+# Optional: SAP HANA System Replication listen interface (String).
 # Controls which network interface HANA listens on for incoming replication connections.
 # Available values: '.internal', '.global'.
 # When not set, listeninterface is not configured and HANA uses its default.
-sap_ha_install_hana_hsr_listeninterface: ''
+# sap_ha_install_hana_hsr_listeninterface: ''

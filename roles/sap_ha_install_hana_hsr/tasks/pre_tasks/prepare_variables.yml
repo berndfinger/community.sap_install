@@ -246,11 +246,11 @@
     success_msg: |
       PASS: Node '{{ node_item.node_name }}' has all required attributes.
     fail_msg: |
-      FAIL: Node '{{ node_item.node_name | default('undefined') }}' is missing required attributes or has empty values.
+      FAIL: Node '{{ node_item.node_name | d('undefined') }}' is missing required attributes or has empty values.
       Each node must have 'node_name', 'node_ip', 'node_role', and 'hana_site' defined with non-empty values."
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
-    label: "{{ node_item.node_name | default('N/A') }}"
+    label: "{{ node_item.node_name | d('N/A') }}"
     loop_var: node_item
 
 - name: SAP HSR - Assert that nodes in 'sap_ha_install_hana_hsr_cluster_nodes' have required 'node_role' values.
@@ -280,11 +280,12 @@
   ansible.builtin.assert:
     that:
       - node_item.node_hsr_ip is defined
+      - node_item.node_hsr_ip is string
       - node_item.node_hsr_ip | string | length > 0
     success_msg: |
       PASS: Node '{{ node_item.node_name }}' has 'node_hsr_ip' defined.
     fail_msg: |
-      FAIL: Node '{{ node_item.node_name }}' is missing 'node_hsr_ip'.
+      FAIL: Node '{{ node_item.node_name }}' parameter 'node_hsr_ip' is undefined, empty, or invalid.
       When using a dedicated replication network, all nodes must define 'node_hsr_ip'.
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
@@ -322,11 +323,11 @@
     __sap_ha_install_hana_hsr_connection:
       node_fqdn: "{{ node_item.node_name }}"
       node_name: "{{ node_item.node_name.split('.')[0] }}"
-      node_domain: "{{ node_item.node_name.split('.')[1:] | join('.') or __sap_ha_install_hana_hsr_domain | default('') }}"
+      node_domain: "{{ node_item.node_name.split('.')[1:] | join('.') or __sap_ha_install_hana_hsr_domain | d('') }}"
       node_ip: "{{ node_item.node_ip }}"
       node_role: "{{ node_item.node_role }}"
       hana_site: "{{ node_item.hana_site }}"
-      node_hsr_ip: "{{ node_item.node_hsr_ip | default('') }}"
+      node_hsr_ip: "{{ node_item.node_hsr_ip | d('') }}"
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
     label: "{{ node_item.node_name }}"
@@ -338,8 +339,8 @@
 # Sets host specific flags that are used for running tasks on specific hosts.
 - name: SAP HSR - Set fact with boolean flags for each host
   ansible.builtin.set_fact:
-    __sap_ha_install_hana_hsr_fact_is_primary: "{{ __sap_ha_install_hana_hsr_connection.node_role | default('') == 'primary' }}"
-    __sap_ha_install_hana_hsr_fact_is_secondary: "{{ __sap_ha_install_hana_hsr_connection.node_role | default('') == 'secondary' }}"
+    __sap_ha_install_hana_hsr_fact_is_primary: "{{ __sap_ha_install_hana_hsr_connection.node_role | d('') == 'primary' }}"
+    __sap_ha_install_hana_hsr_fact_is_secondary: "{{ __sap_ha_install_hana_hsr_connection.node_role | d('') == 'secondary' }}"
 
 - name: SAP HSR - Check that host is a defined member of the HSR cluster
   ansible.builtin.assert:
