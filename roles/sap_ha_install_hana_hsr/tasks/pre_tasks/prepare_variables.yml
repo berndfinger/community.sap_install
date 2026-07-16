@@ -281,7 +281,7 @@
     that:
       - node_item.node_hsr_ip is defined
       - node_item.node_hsr_ip is string
-      - node_item.node_hsr_ip | string | length > 0
+      - node_item.node_hsr_ip | trim | string | length > 0
     success_msg: |
       PASS: Node '{{ node_item.node_name }}' has 'node_hsr_ip' defined.
     fail_msg: |
