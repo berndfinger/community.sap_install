@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
+# Set log_mode at SYSTEM layer only. HOST layer overrides are not managed by this role.
 
-- name: SAP HSR - Check current log_mode in global.ini
+- name: SAP HSR - Check current log_mode in SYSTEM global.ini
   become: true
   become_user: "{{ __sap_ha_install_hana_hsr_sid | lower }}adm"
   ansible.builtin.shell:
@@ -22,7 +23,7 @@
 
 # This task will fail when HSR is already configured,
 # because secondary node nameserver is not running with port 3XX13.
-- name: SAP HSR - Set log_mode to normal
+- name: SAP HSR - Set log_mode to normal for SYSTEM
   become: true
   become_user: "{{ __sap_ha_install_hana_hsr_sid | lower }}adm"
   ansible.builtin.shell:

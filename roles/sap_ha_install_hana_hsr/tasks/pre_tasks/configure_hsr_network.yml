@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
+# Configure replication network settings at SYSTEM layer only. HOST layer overrides are not managed by this role.
 
 - name: SAP HSR - Check current system_replication_hostname_resolution in global.ini
   become: true
