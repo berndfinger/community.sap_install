@@ -248,6 +248,7 @@
     fail_msg: |
       FAIL: Node '{{ node_item.node_name | d('undefined') }}' is missing required attributes or has empty values.
       Each node must have 'node_name', 'node_ip', 'node_role', and 'hana_site' defined with non-empty values."
+    quiet: true
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
     label: "{{ node_item.node_name | d('N/A') }}"
@@ -287,6 +288,7 @@
     fail_msg: |
       FAIL: Node '{{ node_item.node_name }}' parameter 'node_hsr_ip' is undefined, empty, or invalid.
       When using a dedicated replication network, all nodes must define 'node_hsr_ip'.
+    quiet: true
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
     label: "{{ node_item.node_name }}"
