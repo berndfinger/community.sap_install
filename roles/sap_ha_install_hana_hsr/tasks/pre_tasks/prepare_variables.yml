@@ -23,6 +23,7 @@
         FAIL: The variable 'sap_ha_install_hana_hsr_state' is not one of valid values.
         Available values: present, absent
       {% endif %}
+    quiet: true
 
 
 # SID
@@ -48,6 +49,7 @@
       {% else %}
         FAIL: The length of SAP HANA System ID '{{ __sap_ha_install_hana_hsr_sid }}' is not 3 characters!
       {% endif %}
+    quiet: true
 
 
 # Instance Number
@@ -74,6 +76,7 @@
       {% else %}
         FAIL: The SAP HANA Instance Number '{{ __sap_ha_install_hana_hsr_instance_number }}' is not 2 digits!
       {% endif %}
+    quiet: true
 
 
 # Database password
@@ -101,6 +104,7 @@
       {% else %}
         FAIL: The variable 'sap_ha_install_hana_hsr_db_system_password' is empty.
       {% endif %}
+    quiet: true
 
 
 # Domain
@@ -125,6 +129,7 @@
       {% else %}
         FAIL: The variable 'sap_ha_install_hana_hsr_domain' is empty.
       {% endif %}
+    quiet: true
 
 
 # Replication mode
@@ -145,6 +150,7 @@
         FAIL: The variable 'sap_ha_install_hana_hsr_rep_mode' is not one of valid values.
         Available values: sync, syncmem, async
       {% endif %}
+    quiet: true
 
 
 # Operation mode
@@ -165,6 +171,7 @@
         FAIL: The variable 'sap_ha_install_hana_hsr_oper_mode' is not one of valid values.
         Available values: delta_datashipping, logreplay, logreplay_readaccess
       {% endif %}
+    quiet: true
 
 
 # Backup user
@@ -181,6 +188,7 @@
       {% else %}
         FAIL: The variable 'sap_ha_install_hana_hsr_hdbuserstore_system_backup_user' is empty.
       {% endif %}
+    quiet: true
 
 
 # $HOME path
@@ -235,6 +243,7 @@
       {% else %}
       FAIL: Duplicate 'node_name' found in 'sap_ha_install_hana_hsr_cluster_nodes'. Each node must have a unique 'node_name'.
       {% endif %}
+    quiet: true
 
 - name: SAP HSR - Assert that each node in 'sap_ha_install_hana_hsr_cluster_nodes' has required attributes
   ansible.builtin.assert:
@@ -248,6 +257,7 @@
     fail_msg: |
       FAIL: Node '{{ node_item.node_name | d('undefined') }}' is missing required attributes or has empty values.
       Each node must have 'node_name', 'node_ip', 'node_role', and 'hana_site' defined with non-empty values."
+    quiet: true
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
     label: "{{ node_item.node_name | d('N/A') }}"
@@ -268,6 +278,7 @@
       {% else %}
       FAIL: There must be at least one 'secondary' node, but {{ secondary_nodes_count }} were found.
       {% endif %}
+    quiet: true
 
 
 # Replication network
@@ -287,6 +298,7 @@
     fail_msg: |
       FAIL: Node '{{ node_item.node_name }}' parameter 'node_hsr_ip' is undefined, empty, or invalid.
       When using a dedicated replication network, all nodes must define 'node_hsr_ip'.
+    quiet: true
   loop: "{{ __sap_ha_install_hana_hsr_cluster_nodes }}"
   loop_control:
     label: "{{ node_item.node_name }}"
@@ -304,6 +316,7 @@
       PASS: The variable 'sap_ha_install_hana_hsr_listeninterface' is '{{ sap_ha_install_hana_hsr_listeninterface }}'.
     fail_msg: |
       FAIL: The variable 'sap_ha_install_hana_hsr_listeninterface' must be '.internal' or '.global'.
+    quiet: true
   when: sap_ha_install_hana_hsr_listeninterface | d('') | length > 0
 
 - name: SAP HSR - Assert that 'node_hsr_ip' is defined when listeninterface is '.internal'
@@ -363,6 +376,7 @@
       3. Valid Role: The 'node_role' must be either 'primary' or 'secondary'.
 
       If this host is not supposed to be part of the HSR cluster, please remove it from hosts in Ansible Play.
+    quiet: true
 
 - name: SAP HSR - Assert that 'node_hsr_ip' is present on this host
   ansible.builtin.assert:
