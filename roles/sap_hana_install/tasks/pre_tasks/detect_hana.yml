@@ -10,11 +10,13 @@
 # 1. SKIP - 'root' saphostctrl check finds the desired SID and instance number.
 # 2. INSTALL - 'root' saphostctrl check does not find the desired SID and instance number, and no other indicators are found.
 # 3. FAIL - 'root' saphostctrl check does not find the desired SID and instance number, and any other indicators are found.
+#         - Conditions apply when handling Scale-Out systems, where additional hosts share filesystem.
 
 # 'saphostctrl' is not present:
 # 4. SKIP - 'sidadm' sapcontrol check finds the desired SID and instance number.
 # 5. INSTALL - 'sidadm' sapcontrol check does not find the desired SID and instance number, and no other indicators are found.
 # 6. FAIL - 'sidadm' sapcontrol check does not find the desired SID and instance number, and any other indicators are found.
+#         - Conditions apply when handling Scale-Out systems, where additional hosts share filesystem.
 
 # Breakdown of potential scenarios and actions:
 # | saphostctrl | sapcontrol | Instance Found | Files Found | Action
@@ -179,11 +181,6 @@
       or (__sap_hana_install_register_saphostctrl_list_instances.rc is defined
         and __sap_hana_install_register_saphostctrl_list_instances.rc != 0)
 
-- name: SAP HANA - Pre-Tasks - Detect - Show saphostctrl command output in verbose mode
-  ansible.builtin.debug:
-    var: __sap_hana_install_register_saphostctrl_list_instances
-  when: ansible_verbosity >= 2
-
 
 # Check 4: Use 'sapcontrol' and search for SID and instance number in 'GetInstanceProperties' output.
 # The `sapcontrol` command from SAP kernel files can be used to obtain instance information.
@@ -268,19 +265,33 @@
     - not __sap_hana_install_fact_detect_sapcontrol | d(false)
   block:
 
-    # /hana/shared/<SID> directory
-    - name: SAP HANA - Pre-Tasks - Get status of the path '{{ __sap_hana_install_shared_path }}'
-      ansible.builtin.stat:
-        path: "{{ __sap_hana_install_shared_path }}"
-      register: __sap_hana_install_register_stat_hana_shared_sid
+    # Shared directory cannot be used for validation for additional hosts in Scale-Out, because it is:
+    # not empty - Main host is installed and additional hosts are being added.
+    # empty - Main host is being installed together with additional hosts.
+    - name: Block for shared directory
+      when: not __sap_hana_install_fact_is_addhost_host | d(false)
+      block:
+        # /hana/shared/<SID> directory
+        - name: SAP HANA - Pre-Tasks - Get status of the path '{{ __sap_hana_install_shared_path }}'
+          ansible.builtin.stat:
+            path: "{{ __sap_hana_install_shared_path }}"
+          register: __sap_hana_install_register_stat_hana_shared_sid
 
-    - name: SAP HANA - Pre-Tasks - Get contents of the path '{{ __sap_hana_install_shared_path }}'
-      ansible.builtin.find:
-        paths: "{{ __sap_hana_install_shared_path }}"
-        patterns: '*'
-        file_type: 'any'  # New install does not have files and default 'file' will ignore directories.
-      register: __sap_hana_install_register_files_in_hana_shared_sid
-      when: __sap_hana_install_register_stat_hana_shared_sid.stat.exists
+        - name: SAP HANA - Pre-Tasks - Get contents of the path '{{ __sap_hana_install_shared_path }}'
+          ansible.builtin.find:
+            paths: "{{ __sap_hana_install_shared_path }}"
+            patterns: '*'
+            file_type: 'any'  # New install does not have files and default 'file' will ignore directories.
+          register: __sap_hana_install_register_files_in_hana_shared_sid
+          when: __sap_hana_install_register_stat_hana_shared_sid.stat.exists
+
+        - name: SAP HANA - Pre-Tasks - Set fact if SAP files were found
+          ansible.builtin.set_fact:
+            __sap_hana_install_fact_detect_shared_files: true
+          when:
+            - __sap_hana_install_register_stat_hana_shared_sid.stat.exists
+            - __sap_hana_install_register_files_in_hana_shared_sid.matched | int != 0
+
 
     # /usr/sap/<SID> directory
     - name: SAP HANA - Pre-Tasks - Get status of the path '/usr/sap/{{ __sap_hana_install_sid }}'
@@ -296,27 +307,29 @@
       register: __sap_hana_install_register_files_in_usr_sap_sid
       when: __sap_hana_install_register_stat_usr_sap_sid.stat.exists
 
-
     - name: SAP HANA - Pre-Tasks - Set fact if SAP files were found
       ansible.builtin.set_fact:
-        __sap_hana_install_fact_detect_files: true
+        __sap_hana_install_fact_detect_local_files: true
       when:
-        - (__sap_hana_install_register_stat_hana_shared_sid.stat.exists
-            and __sap_hana_install_register_files_in_hana_shared_sid.matched | int != 0)
-          or (__sap_hana_install_register_stat_usr_sap_sid.stat.exists
-            and __sap_hana_install_register_files_in_usr_sap_sid.matched | int != 0 )
+        - __sap_hana_install_register_stat_usr_sap_sid.stat.exists
+        - __sap_hana_install_register_files_in_usr_sap_sid.matched | int != 0
 
 
 ### Decision section based on collected facts.
 
 # 3. FAIL - 'root' saphostctrl check does not find the desired SID and instance number, and any other indicators are found
 # 6. FAIL - 'sidadm' sapcontrol check does not find the desired SID and instance number, and any other indicators are found
+#         - Conditions apply when handling Scale-Out systems, where additional hosts share filesystem.
 - name: SAP HANA - Pre-Tasks - Detect - Fail if potential installation was detected
   ansible.builtin.fail:
     msg: |
       FAIL: Potential existing SAP HANA installation detected based on the presence of identifiable indicators.
+      {% if __sap_hana_install_fact_detect_local_files | d(false) %}
       - Existence of files in '/usr/sap/{{ __sap_hana_install_sid }}/' directory.
+      {% endif %}
+      {% if __sap_hana_install_fact_detect_shared_files | d(false) %}
       - Existence of files in '{{ __sap_hana_install_shared_path }}/' directory.
+      {% endif %}
       These checks trigger failure only when 'saphostctrl' and 'sapcontrol' fail to detect the instance.
 
       Please verify the details above and ensure that you are not trying to install over an existing installation.
@@ -325,11 +338,16 @@
     - not sap_hana_install_force | d(false)
     - not __sap_hana_install_fact_detect_saphostctrl | d(false)
     - not __sap_hana_install_fact_detect_sapcontrol | d(false)
-    - __sap_hana_install_fact_detect_files | d(false)
+    # Always fail when local files are found,
+    # but fail only for shared files if this is not an addhost in Scale-Out.
+    - __sap_hana_install_fact_detect_local_files | d(false)
+      or (__sap_hana_install_fact_detect_shared_files | d(false)
+          and not __sap_hana_install_fact_is_addhost_host | d(false))
 
 
 # 1. SKIP - 'root' saphostctrl check finds the desired SID and instance number.
 # 4. SKIP - 'sidadm' sapcontrol check finds the desired SID and instance number.
+# NOTE: Do not trust directory check enough to skip installation.
 - name: Block for SKIP
   when:
     - __sap_hana_install_fact_detect_saphostctrl | d(false)
@@ -370,7 +388,9 @@
   when:
     - not __sap_hana_install_fact_detect_saphostctrl | d(false)
     - not __sap_hana_install_fact_detect_sapcontrol | d(false)
-    - not __sap_hana_install_fact_detect_files | d(false)
+    - not __sap_hana_install_fact_detect_local_files | d(false)
+    - not (__sap_hana_install_fact_detect_shared_files | d(false)
+        and __sap_hana_install_fact_is_main_host)
 
 
 - name: Block to prepare status message
@@ -379,7 +399,8 @@
     - not ansible_check_mode
   block:
     - name: SAP HANA - Pre-Tasks - Run 'hdblcm --list_systems' for existing database
-      ansible.builtin.shell: |
+      ansible.builtin.shell:
+        cmd: |
           set -o pipefail && ./hdblcm --list_systems | awk '/\/hana\/shared\/{{ __sap_hana_install_sid }}/{a=1}
           /version:/{if (a==1){
             gsub ("^\\s*version: ", "");printf ("%s;", $NF)}
@@ -392,23 +413,53 @@
       register: __sap_hana_install_register_existing_systems
       changed_when: false
 
-    # Scale-Out will show as installed because of filesystem check so we need to
-    # ensure that we show output only if it is valid.
-    - name: Block to show only if output is valid
-      when: __sap_hana_install_register_existing_systems.stdout.split(';') | length == 2
-      block:
-        - name: SAP HANA - Pre-Tasks - Set facts for existing SAP HANA
-          ansible.builtin.set_fact:
-            __sap_hana_install_fact_existing_hana_version:
-              "{{ __sap_hana_install_register_existing_systems.stdout.split(';')[0] }}"
-            __sap_hana_install_fact_existing_hana_hosts:
-              "{{ __sap_hana_install_register_existing_systems.stdout.split(';')[1] }}"
+    - name: SAP HANA - Pre-Tasks - Fail if command 'hdblcm --list_systems' has failed
+      ansible.builtin.fail:
+        msg: |
+          FAIL: Command 'hdblcm --list_systems' failed to execute successfully
+          or results could not be reliably parsed to identify version and hosts of existing installation.
+          Return code: {{ __sap_hana_install_register_existing_systems.rc | d('1') }}
+          Output:      {{ __sap_hana_install_register_existing_systems.stdout | d('') }}
+          Error:       {{ __sap_hana_install_register_existing_systems.stderr | d('') }}
+      when:
+        - __sap_hana_install_register_existing_systems.rc != 0
+          or __sap_hana_install_register_existing_systems.stdout.split(';') | length != 2
 
-        - name: SAP HANA - Pre-Tasks - Display details of existing SAP HANA
-          ansible.builtin.debug:
-            msg: |
-              SAP HANA database is installed and running:
-              HANA Version     -       {{ __sap_hana_install_fact_existing_hana_version }}
-              Hosts            -       {{ __sap_hana_install_fact_existing_hana_hosts }}
-              SID              -       {{ __sap_hana_install_sid }}
-              NR               -       {{ sap_hana_install_number }}
+
+    - name: SAP HANA - Pre-Tasks - Set facts for existing SAP HANA installation
+      ansible.builtin.set_fact:
+        __sap_hana_install_fact_existing_hana_version:
+          "{{ __sap_hana_install_register_existing_systems.stdout.split(';')[0] }}"
+        __sap_hana_install_fact_existing_hana_hosts:
+          "{{ __sap_hana_install_register_existing_systems.stdout.split(';')[1] }}"
+
+    - name: SAP HANA - Pre-Tasks - Display details of existing SAP HANA installation
+      ansible.builtin.debug:
+        msg: |
+          SAP HANA database is installed and running:
+          HANA Version     -       {{ __sap_hana_install_fact_existing_hana_version }}
+          Hosts            -       {{ __sap_hana_install_fact_existing_hana_hosts }}
+          SID              -       {{ __sap_hana_install_sid }}
+          NR               -       {{ sap_hana_install_number }}
+
+
+- name: SAP HANA - Pre-Tasks - Detect - Show detection details in verbose mode
+  ansible.builtin.debug:
+    msg: |
+      Detection results:
+      - force mode: {{ sap_hana_install_force }}
+      - saphostctrl found: {{ __sap_hana_install_fact_detect_saphostctrl | d(false) }}
+      - sapcontrol found: {{ __sap_hana_install_fact_detect_sapcontrol | d(false) }}
+      - local files found: {{ __sap_hana_install_fact_detect_local_files | d(false) }}
+      - shared files found: {{ __sap_hana_install_fact_detect_shared_files | d(false) }}
+      - is installed: {{ __sap_hana_install_fact_is_installed | d(false) }}
+      - existing HANA version: {{ __sap_hana_install_fact_existing_hana_version | d('N/A') }}
+      - existing HANA hosts: {{ __sap_hana_install_fact_existing_hana_hosts | d('N/A') }}
+
+      Host identification flags:
+      - is main host: {{ __sap_hana_install_fact_is_main_host | d(false) }}
+      - is addhost host: {{ __sap_hana_install_fact_is_addhost_host | d(false) }}
+      - is scaleout: {{ __sap_hana_install_fact_is_scaleout | d(false) }}
+      - main host: {{ __sap_hana_install_fact_main_host | d('N/A') }}
+      - addhosts: {{ __sap_hana_install_fact_addhosts_hosts | d([]) | join(', ') }}
+  when: ansible_verbosity >= 2

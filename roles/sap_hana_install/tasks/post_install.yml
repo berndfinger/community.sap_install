@@ -5,6 +5,7 @@
 - name: Block with tasks for new HANA Systems
   when:
     - not __sap_hana_install_fact_is_installed
+    # Execute only on main host and skip execution on addhosts.
     - __sap_hana_install_fact_is_main_host
   block:
 

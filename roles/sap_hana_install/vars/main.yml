@@ -49,12 +49,7 @@ __sap_hana_install_fact_is_scaleout: false
 # Sets default value of HANA exists detection.
 __sap_hana_install_fact_is_installed: false
 
-# The list of all valid hostnames in addhosts string including Managed node.
-# - Used for running all configuration tasks for idempotency.
-__sap_hana_install_fact_all_hosts: []
-
-# The list of all valid hostnames in addhosts string.
-# - Used only for setting '__sap_hana_install_fact_addhosts_hosts_new' and '__sap_hana_install_fact_all_hosts'.
+# The list of all valid hostnames in addhosts string, without main host.
 __sap_hana_install_fact_addhosts_hosts: []
 
 # The list of all valid hostnames in addhosts string without host with existing profiles or directories.
@@ -63,7 +58,8 @@ __sap_hana_install_fact_addhosts_hosts_new: []
 
 # The flags used for separation of tasks between hosts
 # This is main host where hdblcm is executed.
-__sap_hana_install_fact_is_main_host: false
+# Always set to 'true', but changed to 'false' for Scale-Out.
+__sap_hana_install_fact_is_main_host: true
 # This is for hosts defined in addhosts string.
 __sap_hana_install_fact_is_addhost_host: false
 # This is for hosts defined in addhosts string that is not installed yet.
