@@ -85,8 +85,10 @@
             )
           }}
 
-    - name: Block for new addhosts
-      when: __sap_hana_install_fact_addhosts_hosts_new | length > 0
+    - name: Block for new addhosts for existing installation
+      when:
+        - __sap_hana_install_fact_addhosts_hosts_new | length > 0
+        - __sap_hana_install_fact_is_installed
       block:
 
         # We cannot allow execution with 'sap_hana_install_new_system' set to 'true'
@@ -114,7 +116,8 @@
               Specified addhosts: {{ __sap_hana_install_fact_addhosts_hosts | d([]) | join(', ') }}
               Existing hosts: {{ __sap_hana_install_fact_existing_hana_hosts | d('N/A') }}
               New hosts: {{ __sap_hana_install_fact_addhosts_hosts_new | join(', ') }}
-          when: not sap_hana_install_new_system
+          when:
+            - not sap_hana_install_new_system
 
 
 - name: SAP HANA - Addhosts - Pre-Tasks - Set addhosts facts on remaining hosts
