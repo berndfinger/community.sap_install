@@ -138,8 +138,6 @@ __sap_hana_preconfigure_sapnotes_versions: "{{ lookup('vars', '__sap_hana_precon
 
 # In SAP Note 2777782, certain minimal required packages for the different RHEL 8 minor releases are listed.
 # The following will assign them properly to __sap_hana_preconfigure_min_pkgs.
-# If variable __sap_hana_preconfigure_min_packages_VERSION_ARCH is not defined,
-# variable __sap_hana_preconfigure_min_pkgs will be undefined as well.
 
 # Minimum required package levels for RHEL 8.0:
 # Attention: SAP note 2812427 requires more recent package kernel-4.18.0-80.15.1.el8_0 also for x86_64, covered by role sap_general_preconfigure

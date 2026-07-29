@@ -58,8 +58,6 @@ __sap_hana_preconfigure_sapnotes_versions: "{{ lookup('vars', '__sap_hana_precon
 
 # In SAP Note 2235581, certain minimal required packages for the different RHEL 7 minor releases are listed.
 # The following will assign them properly to __sap_hana_preconfigure_min_pkgs.
-# If variable __sap_hana_preconfigure_min_packages_VERSION is not defined,
-# variable __sap_hana_preconfigure_min_pkgs will be undefined as well.
 
 __sap_hana_preconfigure_min_packages_7_2_x86_64:
   - [ 'kernel', '3.10.0-327.62.4.el7' ]
