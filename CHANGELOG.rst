@@ -10,7 +10,7 @@ v1.10.0
 Release Summary
 ---------------
 
-improvements and bug fixes
+Minimum Ansible version is 2.18, improvements for Clusters and HSR, bug fixes
 
 Minor Changes
 -------------
