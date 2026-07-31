@@ -81,6 +81,7 @@
 - name: SAP HANA - Addhosts - Pre-Tasks - Check shared filesystems
   ansible.builtin.include_tasks:
     file: pre_tasks/check_filesystems.yml
+  when: not sap_hana_install_skip_filesystem_check | d(false)
 
 
 # Update HANA directory permissions

@@ -17,26 +17,33 @@
       "{{ ansible_facts['mounts'] | selectattr('mount', 'equalto', sap_hana_install_shared_path) | list | first }}"
   when: ansible_facts['mounts'] | selectattr('mount', 'equalto', sap_hana_install_shared_path) | list | length > 0
 
-- name: SAP HANA - Install - Pre-Tasks - Assert that filesystem is shared - {{ sap_hana_install_shared_path }}
-  ansible.builtin.assert:
-    that:
-      - __sap_hana_install_fact_mount_hana_shared is defined
-      - __sap_hana_install_fact_mount_hana_shared.fstype is defined
-      - __sap_hana_install_fact_mount_hana_shared.fstype in __sap_hana_install_shared_filesystem_types
-    success_msg: >-
-      PASS: The directory {{ sap_hana_install_shared_path }} is mounted as one of supported
-      filesystem types {{ __sap_hana_install_shared_filesystem_types | join(', ') }}.
-    fail_msg: |
-      FAIL: The directory {{ sap_hana_install_shared_path }} is not mounted as shared filesystem.
-      This is required for SAP HANA Scale-Out systems.
+- name: Block to fail if any host fails
+  # Stop execution of remaining tasks in the role, if any task in the block failed on any host.
+  # This ensures that the role does not proceed skipping failed host, but fails the entire role execution.
+  # 'any_errors_fatal' is not documented to work on task level, therefore we use simple block.
+  # http://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-on-the-first-error-any-errors-fatal
+  any_errors_fatal: true
+  block:
+    - name: SAP HANA - Install - Pre-Tasks - Assert that filesystem is shared - {{ sap_hana_install_shared_path }}
+      ansible.builtin.assert:
+        that:
+          - __sap_hana_install_fact_mount_hana_shared is defined
+          - __sap_hana_install_fact_mount_hana_shared.fstype is defined
+          - __sap_hana_install_fact_mount_hana_shared.fstype in __sap_hana_install_shared_filesystem_types
+        success_msg: >-
+          PASS: The directory {{ sap_hana_install_shared_path }} is mounted as one of supported
+          filesystem types {{ __sap_hana_install_shared_filesystem_types | join(', ') }}.
+        fail_msg: |
+          FAIL: The directory {{ sap_hana_install_shared_path }} is not mounted as shared filesystem.
+          This is required for SAP HANA Scale-Out systems.
 
-      Please ensure this is a correctly mounted shared filesystem before proceeding.
-      This role validates prerequisites but does not configure system mounts.
+          Please ensure this is a correctly mounted shared filesystem before proceeding.
+          This role validates prerequisites but does not configure system mounts.
 
-      {% if __sap_hana_install_fact_mount_hana_shared.fstype is defined %}
-      Detected filesystem type: {{ __sap_hana_install_fact_mount_hana_shared.fstype }}
-      {% endif %}
-      Supported filesystem types: {{ __sap_hana_install_shared_filesystem_types | join(', ') }}
+          {% if __sap_hana_install_fact_mount_hana_shared.fstype is defined %}
+          Detected filesystem type: {{ __sap_hana_install_fact_mount_hana_shared.fstype }}
+          {% endif %}
+          Supported filesystem types: {{ __sap_hana_install_shared_filesystem_types | join(', ') }}
 
 
 # /lss/shared - Required for SAP HANA 2.0 SPS08 and higher.
@@ -44,6 +51,11 @@
   when:
     - hostvars[__sap_hana_install_fact_main_host]['__sap_hana_install_fact_is_lss_required'] is defined
     - hostvars[__sap_hana_install_fact_main_host]['__sap_hana_install_fact_is_lss_required']
+  # Stop execution of remaining tasks in the role, if any task in the block failed on any host.
+  # This ensures that the role does not proceed skipping failed host, but fails the entire role execution.
+  # 'any_errors_fatal' is not documented to work on task level, therefore we use simple block.
+  # http://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-on-the-first-error-any-errors-fatal
+  any_errors_fatal: true
   block:
     - name: SAP HANA - Install - Pre-Tasks - Set fact for 'lss_inst_path'
       ansible.builtin.set_fact:

@@ -274,3 +274,7 @@ sap_hana_install_create_initial_tenant: 'y'
 
 # Display SAP HANA hdblcm unattended mode output (hdblcm stdout)
 sap_hana_install_display_unattended_output: false
+
+# (Optional) Set to `true` to skip the filesystem check during SAP HANA installation.
+# This is not recommended, but can be used in case of a non-Production environment.
+sap_hana_install_skip_filesystem_check: false
