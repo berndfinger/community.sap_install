@@ -46,13 +46,13 @@
           PASS: The variable 'sap_hana_install_addhosts' and inventory are aligned.
         fail_msg: |
           FAIL: The variable 'sap_hana_install_addhosts' and inventory are not aligned.
-          The variable 'sap_hana_install_addhosts' should not contain Master host {{ ansible_facts['hostname'] }} and validation is done without it.
 
           Inventory hosts: {{ ansible_play_hosts_all | join(', ') }}
           Addhosts hosts: {{ __sap_hana_install_fact_addhosts_hosts | join(', ') }}
+          NOTE: Comparison was completed without the master host, because only additional hosts are expected in the 'sap_hana_install_addhosts' variable.
           {% if __inventory_diff_addhosts | length > 0 %}
 
-          Ensure that missing hosts are added to the 'sap_hana_install_addhosts' or removed from inventory.
+          Ensure that missing hosts are added to 'sap_hana_install_addhosts' or removed from inventory.
           Hosts missing in the 'sap_hana_install_addhosts': {{ __inventory_diff_addhosts | join(', ') }}
           {% endif %}
           {% if __addhosts_diff_inventory | length > 0 %}
