@@ -88,6 +88,12 @@
 # - Configuration - Run always to ensure idempotent outcome.
 
 - name: Block for Installation tasks
+  # Stop execution of remaining tasks in the role, if any task in the block failed on any host.
+  # This ensures that the role does not proceed skipping failed host, but fails the entire role execution.
+  # 'any_errors_fatal' is not documented to work on task level, therefore we use simple block.
+  # http://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-on-the-first-error-any-errors-fatal
+  # Runs on all hosts in Scale-Out scenario, but allows independent failures for single host installations.
+  any_errors_fatal: "{{ true if __sap_hana_install_fact_is_scaleout else false }}"
   when:
     - sap_hana_install_new_system
       or (ansible_run_tags | d([])
@@ -115,6 +121,12 @@
 
 
 - name: Block for Addhosts tasks
+  # Stop execution of remaining tasks in the role, if any task in the block failed on any host.
+  # This ensures that the role does not proceed skipping failed host, but fails the entire role execution.
+  # 'any_errors_fatal' is not documented to work on task level, therefore we use simple block.
+  # http://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-on-the-first-error-any-errors-fatal
+  # Runs on all hosts in addhosts scenario.
+  any_errors_fatal: true
   when:
     - not sap_hana_install_new_system
       and (__sap_hana_install_fact_is_scaleout
