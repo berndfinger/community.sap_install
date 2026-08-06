@@ -93,7 +93,7 @@
         - sap_swpm_run_sapinst
         - sap_swpm_software_extract_directory is undefined or (sap_swpm_software_extract_directory is none or (sap_swpm_software_extract_directory | length) == 0)
 
-    - name: SAP SWPM Pre Install - Ensure directory '{{ __sap_swpm_fact_sapinst_path }}' exists
+    - name: SAP SWPM Pre Install - Ensure sapinst directory exists
       ansible.builtin.file:
         path: "{{ __sap_swpm_fact_sapinst_path }}"
         state: directory
