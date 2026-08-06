@@ -226,6 +226,15 @@
     - sap_hana_install_configure_firewall | d(false)
     - sap_hana_install_firewall_zone is defined
 
+- name: SAP HANA - Pre-Tasks - Assert that the variable 'sap_hana_install_skip_filesystem_check' is defined as a boolean
+  ansible.builtin.assert:
+    that:
+      - sap_hana_install_skip_filesystem_check is boolean
+    fail_msg: |
+      The variable 'sap_hana_install_skip_filesystem_check' is not a boolean.
+      It should be a boolean (true/false) indicating whether to skip the filesystem check during SAP HANA installation.
+  when: sap_hana_install_skip_filesystem_check is defined
+
 
 # SELinux is not currently supported by SAP using SLES4SAP
 # This can still be overwritten by extra variables.
