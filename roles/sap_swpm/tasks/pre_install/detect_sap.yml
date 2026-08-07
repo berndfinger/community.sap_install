@@ -185,6 +185,9 @@
         cmd: "bash -lc 'which sapcontrol'"
       become: true
       become_user: "{{ __sap_swpm_sidadm_user }}"
+      # This was specifically required for RHEL due to different behavior for non-interactive shells on RHEL vs. SLES.
+      # It is caused by different contents of the skeleton directory '/etc/skel' and '.bashrc' file contents.
+      become_flags: "-i"
       register: __sap_swpm_register_which_sapcontrol
       changed_when: false
       ignore_errors: true
