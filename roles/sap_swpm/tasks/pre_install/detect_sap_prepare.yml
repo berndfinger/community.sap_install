@@ -3,25 +3,6 @@
 
 # Prepare lists of instance names and numbers for detection based on provided variables and product catalog ID.
 
-# Extract prefix from Product ID, or inform that prefix is not recognized.
-- name: SAP SWPM Pre Install - Set fact with SAP Product ID prefix
-  ansible.builtin.set_fact:
-    __sap_swpm_fact_product_prefix: >-
-      {{ sap_swpm_product_catalog_id.split(':') | first
-        if sap_swpm_product_catalog_id | d('') | trim | length > 0 and ':' in sap_swpm_product_catalog_id
-        else '' }}
-
-- name: SAP SWPM Pre Install - Detect - Inform if SAP Product ID prefix is unavailable
-  ansible.builtin.debug:
-    msg: |
-      WARN: Unable to extract SAP Product ID prefix for product catalog ID '{{ sap_swpm_product_catalog_id }}'.
-      Expected format of product catalog ID is 'PREFIX:REST_OF_ID' (e.g., 'NW_ABAP_ASCS:S4HANA2025.CORE.HDB.ABAP').
-      Detection of existing SAP instances will proceed based on contents of 'sap_swpm_inifile_sections_list' variable.
-
-      NOTE: Providing invalid SAP Product ID will most likely lead into failure during SWPM execution.
-  when: __sap_swpm_fact_product_prefix | length == 0
-
-
 # Prepare lists of instance names and numbers for detection.
 # Lists based on Product ID.
 # Regex is used to remove items with empty values.
@@ -30,21 +11,19 @@
     __sap_swpm_detect_instances:
       "{{ __sap_swpm_product_sections_dict[__sap_swpm_fact_product_prefix]['instances'] }}"
   when:
-    - __sap_swpm_fact_product_prefix | trim | length > 0
     - __sap_swpm_product_sections_dict[__sap_swpm_fact_product_prefix] is defined
     - __sap_swpm_product_sections_dict[__sap_swpm_fact_product_prefix]['instances'] is defined
 
 
 # Lists based on sections list if Product ID cannot be used.
 # NOTE: Defaults before 'unique' do not serve any purpose, because when already validates it,
-# but it is required for linting to pass:
+# but it is required for linting to pass.
 # Falling back to Ansible unique filter as Jinja2 one failed: 'sap_swpm_ascs_instance_nr' is undefined
 - name: Block to fall back on sections if product ID is not in dictionary
   when:
-    - __sap_swpm_fact_product_prefix | trim | length == 0
-      or __sap_swpm_fact_product_prefix not in (
+    - __sap_swpm_fact_product_prefix not in (
         __sap_swpm_product_sections_dict.keys() | list
-        + __sap_swpm_product_detection_skipped | dict2items | map(attribute='value') | flatten)
+        + __sap_swpm_product_detection_unavailable.skip | d([]))
   block:
 
     - name: SAP SWPM Pre Install - Detect - Set fact with lists for ASCS detection
@@ -125,13 +104,6 @@
   ansible.builtin.pause:
     seconds: "{{ 30 if not sap_swpm_force | d(false) else 5 }}"
     prompt: |
-      WARN: SAP Product {{ sap_swpm_product_catalog_id }} cannot be reliably detected by this role due to its nature.
-
-      {% if __sap_swpm_fact_product_prefix in __sap_swpm_product_detection_skipped['database_load'] %}
-      - Database Load does not store any local files that can be detected.
-        SWPM handles repeated execution by itself, but you need to proceed with caution when targeting live SAP System.
-      {% endif %}
-  when:
-    - __sap_swpm_fact_product_prefix | d('') | trim | length > 0
-    - __sap_swpm_fact_product_prefix
-      in __sap_swpm_product_detection_skipped | dict2items | map(attribute='value') | flatten | unique
+      WARN: SAP Product {{ sap_swpm_product_catalog_id }} cannot be reliably detected by this role,
+      but its execution is considered safe to proceed.
+  when: __sap_swpm_fact_product_prefix in __sap_swpm_product_detection_unavailable.skip | d([])

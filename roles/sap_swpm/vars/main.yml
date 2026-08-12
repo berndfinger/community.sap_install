@@ -138,15 +138,19 @@ __sap_swpm_product_sections_dict:
 # This is special list of product prefixes, where we cannot detect SAP,
 # because it does not create any recognizable files.
 # NOTE: Do not add product prefixes already in '__sap_swpm_product_sections_dict'!
-__sap_swpm_product_detection_skipped:
-  # Product prefixes that are known for Database Load.
-  # Installs only 'saphostctrl' and rest is done in database.
+__sap_swpm_product_detection_unavailable:
+  # List of product prefixes that cannot be allowed to proceed without explicit acknowledgement.
+  fail: []
+
+  # List of safe product prefixes that can be allowed to proceed without explicit acknowledgement.
+  skip: []
+
+  # Dedicated fail list for Database Load products, which are considered unsafe to proceed without explicit acknowledgement.
+  # Database load installs only 'saphostctrl' and rest is done in database.
   # This is not conclusive enough for us to decide and SWPM handles this itself.
-  database_load:
+  dbload:
     - NW_ABAP_DB
     - NW_Java_DB
-  # Space for more categories, if more products are found. Candidates:
-  # NW_ABAP_DB_DBRefresh, NW_Java_DB_DBRefresh, NW_Webdispatcher.
 
 # System ID (SID) in upper case.
 __sap_swpm_sid: "{{ sap_swpm_sid | upper }}"
