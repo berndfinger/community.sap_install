@@ -17,12 +17,13 @@
   when: sap_hostagent_rpm_remote
 
 
-# Parameter 'disable_gpg_check' is not package parameter,
-# but it is recognized by underlying package managers.
 - name: SAP Host Agent - RPM - Ensure that the RPM file is installed
   ansible.builtin.package:
     name: "{{ __sap_hostagent_register_tmpdir.path }}/{{ sap_hostagent_rpm_file_name }}"
     state: present
+
+    # These are not package parameters, but they are recognized by underlying package managers.
     disable_gpg_check: true
+    allow_downgrade: true
   become: true
   become_user: root

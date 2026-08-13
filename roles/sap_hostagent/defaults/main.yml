@@ -10,7 +10,9 @@ sap_hostagent_installation_type: 'sar'
 # Select if existing SAP Host Agent installation should be overwritten (Boolean).
 # Set to 'true' to overwrite existing SAP Host Agent installation.
 # Set to 'false' to skip installation tasks if existing installation is detected.
-# NOTE: Using this option for 'sar' and 'bundle' will allow upgrade and downgrade of SAP Host Agent.
+# NOTE: Downgrade and upgrade is available for all installation types.
+# NOTE: Overwrite with identical version is limited to installation type 'sar' and 'bundle'.
+#       For installation type 'rpm', the package will remain unchanged if the two versions are identical.
 sap_hostagent_overwrite: false
 
 

@@ -23,7 +23,9 @@
       ansible.builtin.debug:
         msg: |
           INFO: SAP Host Agent is already installed on this host. Skipping installation tasks.
+          {% if sap_hostagent_installation_type != 'rpm' %}
           To overwrite existing installation, set 'sap_hostagent_overwrite' to 'true'.
+          {% endif %}
 
 
 - name: SAP Host Agent - Detect - Inform that SAP Host Agent is already installed and overwrite is set to true
