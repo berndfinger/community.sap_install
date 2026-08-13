@@ -209,7 +209,7 @@
       - Found in SAP services file (/usr/sap/sapservices).
       {% endif %}
       {% if __sap_swpm_fact_detect_instance_profiles_found | d(false) %}
-      - Found in profile files (/sapmnt/{{ __sap_swpm_sid }}/profile/):
+      - Found in profile files (/sapmnt/{{ __sap_swpm_sid }}/profile/).
       {% endif %}
       {% if not __any_checks_true %}
       - No existing installation detected for this instance
