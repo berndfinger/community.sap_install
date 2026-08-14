@@ -15,7 +15,7 @@ This role installs SAP Host Agent with following source methods:
 
 - **SAP bundle**
   - Source: SAP Software Center under products like `SAP HANA PLATFORM EDITION`.
-  - These archives contain `HOSTAGENT.TGZ` file, that is used for installation.
+  - These archives contain the `HOSTAGENT.TGZ` file used for installation.
 
 - **RPM package** (Red Hat only)
   - Source: SAP Software Center under product `SAP HOST AGENT`.
