@@ -34,7 +34,7 @@
 
 # Check 1: Check if the group 'sapsys' exists with correct ID.
 # The role supports specifying the 'sapsys' group id in variable `sap_swpm_sapsys_gid`.
-# The installation will fail if there is already a group named sapsys but with a different ID.
+# The installation will show warning if there is already a group named sapsys but with a different ID.
 # NOTE: This is executed even if the above checks detect an existing installation, because we want to identify conflicts.
 
 # This is also used for validation before using 'sidadm' sapcontrol.
@@ -49,12 +49,13 @@
 # [0] - 'X' if the password is set.
 # [1] - Group ID.
 # [2] - Group members.
-- name: SAP SWPM Pre Install - Detect - Fail if conflict exists for group ID 'sapsys'
-  ansible.builtin.fail:
+- name: SAP SWPM Pre Install - Detect - Warn if conflict exists for group ID 'sapsys'
+  ansible.builtin.debug:
     msg: |
-      FAIL: Group 'sapsys' exists but with a different group ID.
+      WARN: Group 'sapsys' exists but with a different group ID.
       Expected: '{{ sap_swpm_sapsys_gid }}'
       Found: '{{ ansible_facts["getent_group"]['sapsys'][1] }}'
+      SWPM installation will proceed and existing group will be used.
   when:
     - sap_swpm_sapsys_gid is defined
     - sap_swpm_sapsys_gid is string
@@ -66,7 +67,7 @@
 
 # Check 2: Check if the user 'sidadm' exists with correct ID.
 # The role supports specifying the 'sidadm' user id in variable `sap_swpm_sidadm_uid`.
-# The installation will fail if there is already a user named sidadm but with a different ID.
+# The installation will show warning if there is already a user named sidadm but with a different ID.
 # NOTE: This is executed even if above check detected existing installation, because we want to know of conflict.
 
 # This is also used for validation before using 'sidadm' sapcontrol.
@@ -80,12 +81,13 @@
 # [0] - 'X' if the password is set.
 # [1] - User ID.
 # [2] - Group ID.
-- name: SAP SWPM Pre Install - Detect - Fail if conflict exists for user ID '{{ __sap_swpm_sidadm_user }}'
-  ansible.builtin.fail:
+- name: SAP SWPM Pre Install - Detect - Warn if conflict exists for user ID '{{ __sap_swpm_sidadm_user }}'
+  ansible.builtin.debug:
     msg: |
-      FAIL: User '{{ __sap_swpm_sidadm_user }}' exists but with a different user ID.
+      WARN: User '{{ __sap_swpm_sidadm_user }}' exists but with a different user ID.
       Expected: '{{ sap_swpm_sidadm_uid }}'
       Found: '{{ ansible_facts["getent_passwd"][__sap_swpm_sidadm_user][1] }}'
+      SWPM installation will proceed and existing user will be used.
   when:
     - sap_swpm_sidadm_uid is defined
     - sap_swpm_sidadm_uid is string
@@ -97,7 +99,7 @@
 
 # Check 3: Check if the user 'sapadm' exists with correct ID.
 # The role supports specifying the 'sapadm' user id in variable `sap_swpm_sapadm_uid`.
-# The installation will fail if there is already a user named sapadm but with a different ID.
+# The installation will show warning if there is already a user named sapadm but with a different ID.
 # NOTE: This is executed even if above check detected existing installation, because we want to know of conflict.
 
 # The getent data for 'sapadm' is collected in the previous check.
@@ -107,12 +109,13 @@
 # [0] - 'X' if the password is set.
 # [1] - User ID.
 # [2] - Group ID.
-- name: SAP SWPM Pre Install - Detect - Fail if conflict exists for user ID 'sapadm'
-  ansible.builtin.fail:
+- name: SAP SWPM Pre Install - Detect - Warn if conflict exists for user ID 'sapadm'
+  ansible.builtin.debug:
     msg: |
-      FAIL: User 'sapadm' exists but with a different user ID.
+      WARN: User 'sapadm' exists but with a different user ID.
       Expected: '{{ sap_swpm_sapadm_uid }}'
       Found: '{{ ansible_facts["getent_passwd"]['sapadm'][1] }}'
+      SWPM installation will proceed and existing user will be used.
   when:
     - sap_swpm_sapadm_uid is defined
     - sap_swpm_sapadm_uid is string
