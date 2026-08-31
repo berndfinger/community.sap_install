@@ -50,7 +50,8 @@ argument_specs:
             description:
               - Size of the disk device that is used for the filesystem.
               - For filesystems with no LVM logical volume striping, this is the total size of the filesystem.
-              - For filesystems with LVM LV striping defined (`lvm_lv_stripes`), this is the size of each disk. The resulting filesystem size will be `disk_size` multiplied by `lvm_lv_stripes` (=disks).
+              - For filesystems with LVM LV striping defined (`lvm_lv_stripes`), this is the size of each disk.
+              - The resulting filesystem size will be `disk_size` multiplied by `lvm_lv_stripes` (=disks).
             type: str
 
           filesystem_type:
