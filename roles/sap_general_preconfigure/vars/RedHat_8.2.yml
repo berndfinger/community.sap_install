@@ -1,7 +1,0 @@
-# SPDX-License-Identifier: Apache-2.0
----
-
-# vars file for sap_general_preconfigure
-
-__sap_general_preconfigure_kernel_parameters_default:
-  - { name: vm.max_map_count, value: '2147483647' }
