@@ -157,15 +157,15 @@ installation steps of SAP notes.<br>
 - _Type:_ `bool`
 
 If `sap_general_preconfigure_config_all` is set to `false`, set this variable to `true` to perform only the<br>
-configuration steps of SAP notes for which the corresponding SAP notes parameters have been set to `true`.<br>
+configuration steps of SAP notes. In previous versions, also all the role variables corresponding to the numbers<br>
+of the steps in the SAP notes had to be specified.<br>
+This is no longer necessary. Use tags instead to limit the execution of this role to certain steps of SAP notes.<br>
 
 Example:
 
 ```yaml
 sap_general_preconfigure_config_all: false
 sap_general_preconfigure_configuration: true
-sap_general_preconfigure_2002167_02: true
-sap_general_preconfigure_1391070: true
 ```
 
 ### sap_general_preconfigure_assert

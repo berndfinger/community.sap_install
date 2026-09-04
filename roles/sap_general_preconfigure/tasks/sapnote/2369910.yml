@@ -8,7 +8,7 @@
     - always
 
 - name: Check locales
-  when: sap_general_preconfigure_config_all | d(true) or sap_general_preconfigure_2369910 | d(false)
+  when: sap_general_preconfigure_config_all | d(true) or sap_general_preconfigure_configuration | d(false)
   tags:
     - sap_general_preconfigure_2369910
     - sap_general_preconfigure_configure_locale

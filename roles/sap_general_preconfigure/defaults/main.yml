@@ -12,7 +12,7 @@
 
 # sap_general_preconfigure_configuration: (not defined by default)
 # If `sap_general_preconfigure_config_all` is set to `false`, set this variable to `true` to perform only the
-# configuration steps of SAP notes for which the corresponding SAP notes parameters have been set to `true`.
+# configuration steps of SAP notes.
 # Example: See README.md
 
 sap_general_preconfigure_assert: false
